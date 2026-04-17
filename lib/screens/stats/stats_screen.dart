@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/product_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../models/product_model.dart';
 
 /// Экран статистики
@@ -12,6 +13,7 @@ class StatsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
     final provider = context.watch<ProductProvider>();
     final total = provider.products.length;
     final fresh = provider.freshProducts.length;
@@ -19,7 +21,7 @@ class StatsScreen extends StatelessWidget {
     final expired = provider.expiredProducts.length;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -30,7 +32,7 @@ class StatsScreen extends StatelessWidget {
                   style: GoogleFonts.exo2(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.accent,
+                    color: Theme.of(context).colorScheme.primary,
                     letterSpacing: 2,
                   )),
               const SizedBox(height: 20),
@@ -97,6 +99,7 @@ class _BigCounter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -109,7 +112,8 @@ class _BigCounter extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.accent.withOpacity(0.3)),
+        border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
       ),
       child: Row(
         children: [
@@ -125,12 +129,12 @@ class _BigCounter extends StatelessWidget {
                   style: GoogleFonts.exo2(
                     fontSize: 52,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.accent,
+                    color: Theme.of(context).colorScheme.primary,
                   )),
             ],
           ),
           const Spacer(),
-          Text('❄️', style: const TextStyle(fontSize: 56))
+          const Text('❄️', style: TextStyle(fontSize: 56))
               .animate(onPlay: (c) => c.repeat(reverse: true))
               .scale(
                   begin: const Offset(1, 1),
@@ -152,6 +156,7 @@ class _FillIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
     final total = fresh + warning + expired;
     if (total == 0) return const SizedBox.shrink();
 
@@ -225,6 +230,7 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -259,6 +265,7 @@ class _CategoryBreakdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
     final Map<ProductCategory, int> counts = {};
     for (final p in products) {
       counts[p.category] = (counts[p.category] ?? 0) + 1;
@@ -296,7 +303,8 @@ class _CategoryBreakdown extends StatelessWidget {
                       child: LinearProgressIndicator(
                         value: pct,
                         backgroundColor: AppColors.border,
-                        valueColor: AlwaysStoppedAnimation(AppColors.accent),
+                        valueColor:
+                            const AlwaysStoppedAnimation(AppColors.accent),
                         minHeight: 4,
                       ),
                     ),

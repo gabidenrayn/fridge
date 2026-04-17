@@ -157,7 +157,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Название
-                      _FieldLabel('Название продукта'),
+                      const _FieldLabel('Название продукта'),
                       _StyledTextField(
                         controller: _nameCtrl,
                         hint: 'Введите название',
@@ -167,7 +167,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       const SizedBox(height: 16),
 
                       // Бренд
-                      _FieldLabel('Бренд (необязательно)'),
+                      const _FieldLabel('Бренд (необязательно)'),
                       _StyledTextField(
                           controller: _brandCtrl, hint: 'Например: Danone'),
                       const SizedBox(height: 16),
@@ -179,7 +179,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _FieldLabel('Количество'),
+                                const _FieldLabel('Количество'),
                                 _StyledTextField(
                                   controller: _quantityCtrl,
                                   hint: '1',
@@ -192,7 +192,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _FieldLabel('Единица'),
+                              const _FieldLabel('Единица'),
                               _UnitDropdown(
                                 value: _unit,
                                 units: _units,
@@ -205,7 +205,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       const SizedBox(height: 16),
 
                       // Категория
-                      _FieldLabel('Категория'),
+                      const _FieldLabel('Категория'),
                       _CategorySelector(
                         selected: _category,
                         onChanged: (c) => setState(() => _category = c),
@@ -236,7 +236,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       const SizedBox(height: 16),
 
                       // Заметка
-                      _FieldLabel('Заметка (необязательно)'),
+                      const _FieldLabel('Заметка (необязательно)'),
                       _StyledTextField(
                         controller: _noteCtrl,
                         hint: 'Любая дополнительная информация...',
@@ -290,7 +290,7 @@ class _FormHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.border),
               ),
-              child: Icon(Icons.arrow_back_ios_new_rounded,
+              child: const Icon(Icons.arrow_back_ios_new_rounded,
                   color: AppColors.textSecondary, size: 16),
             ),
           ),
@@ -380,15 +380,15 @@ class _StyledTextField extends StatelessWidget {
             const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.accent),
+          borderSide: const BorderSide(color: AppColors.accent),
         ),
       ),
     );
@@ -564,7 +564,7 @@ class _PhotoPicker extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _FieldLabel('Фото (необязательно)'),
+        const _FieldLabel('Фото (необязательно)'),
         GestureDetector(
           onTap: onPick,
           child: Container(
@@ -583,7 +583,7 @@ class _PhotoPicker extends StatelessWidget {
                     child: Stack(
                       children: [
                         // изображение из файла
-                        Positioned.fill(
+                        const Positioned.fill(
                           child: Icon(Icons.image_rounded,
                               color: AppColors.accent, size: 32),
                         ),
@@ -594,11 +594,11 @@ class _PhotoPicker extends StatelessWidget {
                             onTap: onRemove,
                             child: Container(
                               padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 color: AppColors.expired,
                                 shape: BoxShape.circle,
                               ),
-                              child: Icon(Icons.close,
+                              child: const Icon(Icons.close,
                                   size: 12, color: Colors.white),
                             ),
                           ),
@@ -610,7 +610,7 @@ class _PhotoPicker extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add_photo_alternate_outlined,
+                        const Icon(Icons.add_photo_alternate_outlined,
                             color: AppColors.textMuted, size: 24),
                         const SizedBox(height: 4),
                         Text('Добавить фото',

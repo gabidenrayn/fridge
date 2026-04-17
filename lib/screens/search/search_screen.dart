@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/constants/app_colors.dart';
 import '../../models/product_model.dart';
 import '../../providers/product_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../widgets/product_card.dart';
 import '../product/product_form_screen.dart';
 
@@ -35,10 +36,11 @@ class _SearchScreenState extends State<SearchScreen>
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
     final provider = context.watch<ProductProvider>();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -70,7 +72,7 @@ class _SearchScreenState extends State<SearchScreen>
                         hintText: 'Поиск по названию...',
                         hintStyle:
                             GoogleFonts.nunito(color: AppColors.textMuted),
-                        prefixIcon: Icon(Icons.search_rounded,
+                        prefixIcon: const Icon(Icons.search_rounded,
                             color: AppColors.textMuted),
                         suffixIcon: _searchCtrl.text.isNotEmpty
                             ? GestureDetector(
@@ -78,7 +80,7 @@ class _SearchScreenState extends State<SearchScreen>
                                   _searchCtrl.clear();
                                   provider.setSearch('');
                                 },
-                                child: Icon(Icons.close_rounded,
+                                child: const Icon(Icons.close_rounded,
                                     color: AppColors.textMuted),
                               )
                             : null,
@@ -171,6 +173,7 @@ class _ProductList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
     if (products.isEmpty) {
       return Center(
         child: Text(emptyMessage,

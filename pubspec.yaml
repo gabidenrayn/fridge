@@ -20,6 +20,14 @@ dependencies:
   # Сеть
   http: ^1.2.1
 
+  # Firebase
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+
+  # Локальное хранение
+  shared_preferences: ^2.3.2
+
   # Сканер штрихкода
   mobile_scanner: ^5.2.3
 

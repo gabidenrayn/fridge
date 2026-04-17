@@ -18,6 +18,7 @@ class AppBottomNavBar extends StatelessWidget {
     _NavItem(icon: Icons.qr_code_scanner_rounded, label: 'Сканер'),
     _NavItem(icon: Icons.search_rounded, label: 'Поиск'),
     _NavItem(icon: Icons.bar_chart_rounded, label: 'Статистика'),
+    _NavItem(icon: Icons.account_circle_rounded, label: 'Аккаунт'),
   ];
 
   @override
@@ -26,7 +27,8 @@ class AppBottomNavBar extends StatelessWidget {
       height: 72,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.border, width: 1)),
+        border:
+            const Border(top: BorderSide(color: AppColors.border, width: 1)),
         boxShadow: [
           BoxShadow(
             color: AppColors.accent.withOpacity(0.06),

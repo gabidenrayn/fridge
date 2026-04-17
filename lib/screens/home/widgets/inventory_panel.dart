@@ -8,9 +8,11 @@ import '../../../providers/product_provider.dart';
 import '../../../widgets/product_card.dart';
 import '../../product/product_form_screen.dart';
 
-/// Панель инвентаря — открывается после анимации холодильника
+/// Панель инвентаря — открывается после анимации холодильника или морозильника
 class InventoryPanel extends StatefulWidget {
-  const InventoryPanel({super.key});
+  final bool isFreezer;
+
+  const InventoryPanel({super.key, required this.isFreezer});
 
   @override
   State<InventoryPanel> createState() => _InventoryPanelState();
@@ -22,7 +24,9 @@ class _InventoryPanelState extends State<InventoryPanel> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ProductProvider>();
-    final products = provider.products;
+    final products =
+        widget.isFreezer ? provider.freezerProducts : provider.fridgeProducts;
+    final sectionTitle = widget.isFreezer ? 'Морозильник' : 'Холодильник';
 
     return Container(
       decoration: BoxDecoration(
@@ -40,7 +44,7 @@ class _InventoryPanelState extends State<InventoryPanel> {
       child: Column(
         children: [
           // ─── Заголовок ───
-          _PanelHeader(total: products.length),
+          _PanelHeader(total: products.length, sectionTitle: sectionTitle),
 
           // ─── Категории (горизонтальный скролл) ───
           _CategoryFilter(
@@ -52,12 +56,12 @@ class _InventoryPanelState extends State<InventoryPanel> {
           ),
 
           // ─── Статистика-строка ───
-          _StatsRow(provider: provider),
+          _StatsRow(products: products),
 
           // ─── Список продуктов ───
           Expanded(
             child: products.isEmpty
-                ? _EmptyInventory()
+                ? _EmptyInventory(isFreezer: widget.isFreezer)
                 : ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                     itemCount: products.length,
@@ -97,14 +101,16 @@ class _InventoryPanelState extends State<InventoryPanel> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Отмена', style: TextStyle(color: AppColors.textMuted)),
+            child: const Text('Отмена',
+                style: TextStyle(color: AppColors.textMuted)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               context.read<ProductProvider>().deleteProduct(product);
             },
-            child: Text('Удалить', style: TextStyle(color: AppColors.expired)),
+            child: const Text('Удалить',
+                style: TextStyle(color: AppColors.expired)),
           ),
         ],
       ),
@@ -114,7 +120,8 @@ class _InventoryPanelState extends State<InventoryPanel> {
 
 class _PanelHeader extends StatelessWidget {
   final int total;
-  const _PanelHeader({required this.total});
+  final String sectionTitle;
+  const _PanelHeader({required this.total, required this.sectionTitle});
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +146,7 @@ class _PanelHeader extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'ИНВЕНТАРЬ',
+                  sectionTitle.toUpperCase(),
                   style: GoogleFonts.exo2(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -170,7 +177,8 @@ class _PanelHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.accent.withOpacity(0.4)),
               ),
-              child: Icon(Icons.add_rounded, color: AppColors.accent, size: 20),
+              child: const Icon(Icons.add_rounded,
+                  color: AppColors.accent, size: 20),
             ),
           ),
         ],
@@ -259,8 +267,8 @@ class _CatChip extends StatelessWidget {
 }
 
 class _StatsRow extends StatelessWidget {
-  final ProductProvider provider;
-  const _StatsRow({required this.provider});
+  final List<ProductModel> products;
+  const _StatsRow({required this.products});
 
   @override
   Widget build(BuildContext context) {
@@ -269,19 +277,19 @@ class _StatsRow extends StatelessWidget {
       child: Row(
         children: [
           _StatChip(
-            count: provider.freshProducts.length,
+            count: products.where((p) => p.freshnessStatus == 0).length,
             label: 'свежих',
             color: AppColors.fresh,
           ),
           const SizedBox(width: 8),
           _StatChip(
-            count: provider.warningProducts.length,
+            count: products.where((p) => p.freshnessStatus == 1).length,
             label: 'скоро',
             color: AppColors.warning,
           ),
           const SizedBox(width: 8),
           _StatChip(
-            count: provider.expiredProducts.length,
+            count: products.where((p) => p.freshnessStatus == 2).length,
             label: 'просрочено',
             color: AppColors.expired,
           ),
@@ -337,27 +345,33 @@ class _StatChip extends StatelessWidget {
 }
 
 class _EmptyInventory extends StatelessWidget {
+  final bool isFreezer;
+
+  const _EmptyInventory({required this.isFreezer});
+
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('📭', style: const TextStyle(fontSize: 48))
+          const Text('📭', style: TextStyle(fontSize: 48))
               .animate(onPlay: (c) => c.repeat(reverse: true))
               .scale(
                   begin: const Offset(1, 1),
                   end: const Offset(1.05, 1.05),
                   duration: 1500.ms),
           const SizedBox(height: 16),
-          Text('Холодильник пуст',
-              style:
-                  GoogleFonts.exo2(color: AppColors.textMuted, fontSize: 16)),
+          Text(
+            isFreezer ? 'Морозильник пуст' : 'Холодильник пуст',
+            style: GoogleFonts.exo2(color: AppColors.textMuted, fontSize: 16),
+          ),
           const SizedBox(height: 6),
-          Text('Добавьте продукты через сканер\nили кнопку «+»',
-              textAlign: TextAlign.center,
-              style:
-                  GoogleFonts.nunito(color: AppColors.textMuted, fontSize: 13)),
+          Text(
+            'Добавьте продукты через сканер\nили кнопку «+»',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.nunito(color: AppColors.textMuted, fontSize: 13),
+          ),
         ],
       ),
     );

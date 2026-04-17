@@ -53,7 +53,7 @@ class DatabaseHelper {
   Future<List<ProductModel>> getAllProducts() async {
     final db = await database;
     final maps = await db.query('products', orderBy: 'expiry_date ASC');
-    return maps.map(ProductModel.fromMap).toList();
+    return maps.map<ProductModel>(ProductModel.fromMap).toList();
   }
 
   Future<int> updateProduct(ProductModel product) async {
@@ -82,7 +82,7 @@ class DatabaseHelper {
       whereArgs: [limit.toIso8601String(), now.toIso8601String()],
       orderBy: 'expiry_date ASC',
     );
-    return maps.map(ProductModel.fromMap).toList();
+    return maps.map<ProductModel>(ProductModel.fromMap).toList();
   }
 
   Future<List<ProductModel>> searchProducts(String query) async {
@@ -92,6 +92,6 @@ class DatabaseHelper {
       where: 'name LIKE ?',
       whereArgs: ['%$query%'],
     );
-    return maps.map(ProductModel.fromMap).toList();
+    return maps.map<ProductModel>(ProductModel.fromMap).toList();
   }
 }

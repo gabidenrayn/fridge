@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/utils/date_utils.dart';
 
 /// Категории продуктов
@@ -148,6 +149,42 @@ class ProductModel {
       imagePath: map['image_path'] as String?,
       isFavorite: (map['is_favorite'] as int? ?? 0) == 1,
       brand: map['brand'] as String?,
+    );
+  }
+
+  /// Сериализация для Firestore
+  Map<String, dynamic> toFirestore() {
+    return {
+      'name': name,
+      'barcode': barcode,
+      'expiryDate': Timestamp.fromDate(expiryDate),
+      'purchaseDate': Timestamp.fromDate(purchaseDate),
+      'quantity': quantity,
+      'unit': unit,
+      'category': category.index,
+      'note': note,
+      'imagePath': imagePath,
+      'isFavorite': isFavorite,
+      'brand': brand,
+    };
+  }
+
+  /// Десериализация из Firestore
+  factory ProductModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return ProductModel(
+      id: int.tryParse(doc.id), // Для совместимости, но в облаке ID строковый
+      name: data['name'] ?? '',
+      barcode: data['barcode'],
+      expiryDate: (data['expiryDate'] as Timestamp).toDate(),
+      purchaseDate: (data['purchaseDate'] as Timestamp).toDate(),
+      quantity: (data['quantity'] as num).toDouble(),
+      unit: data['unit'] ?? 'шт',
+      category: ProductCategory.values[data['category'] ?? 6],
+      note: data['note'],
+      imagePath: data['imagePath'],
+      isFavorite: data['isFavorite'] ?? false,
+      brand: data['brand'],
     );
   }
 }

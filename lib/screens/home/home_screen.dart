@@ -4,8 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/product_provider.dart';
+import '../../providers/theme_provider.dart';
 import 'widgets/fridge_widget.dart';
 import 'widgets/inventory_panel.dart';
+
+enum StorageSection { fridge, freezer }
 
 /// Главный экран с холодильником и инвентарём
 class HomeScreen extends StatefulWidget {
@@ -16,7 +19,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool _fridgeOpen = false;
+  StorageSection? _openSection;
 
   @override
   void initState() {
@@ -30,10 +33,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<ProductProvider>();
-    final screenH = MediaQuery.of(context).size.height;
+    final themeProvider = context.watch<ThemeProvider>();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // ─── Фоновые декоративные круги ───
@@ -44,26 +47,35 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               children: [
                 // Заголовок
-                _AppHeader(),
+                _AppHeader(themeProvider),
 
-                // Холодильник по центру
-                SizedBox(
-                  height: _fridgeOpen ? 200 : screenH * 0.45,
+                // Единый холодильник с разделением
+                Expanded(
                   child: Center(
                     child: FridgeWidget(
-                      isOpen: _fridgeOpen,
-                      totalItems: provider.products.length,
-                      expiringCount: provider.warningProducts.length +
-                          provider.expiredProducts.length,
-                      onTap: () => setState(() => _fridgeOpen = !_fridgeOpen),
+                      openSection: _openSection,
+                      onSectionTap: (section) =>
+                          setState(() => _openSection = section),
+                      fridgeItems: provider.fridgeProducts.length,
+                      freezerItems: provider.freezerProducts.length,
+                      fridgeExpiring: provider.fridgeProducts
+                          .where((p) => p.freshnessStatus >= 1)
+                          .length,
+                      freezerExpiring: provider.freezerProducts
+                          .where((p) => p.freshnessStatus >= 1)
+                          .length,
                     ),
                   ),
                 ),
 
-                // Панель инвентаря — появляется когда холодильник открыт
-                if (_fridgeOpen) Expanded(child: const InventoryPanel()),
+                if (_openSection != null)
+                  Expanded(
+                    child: InventoryPanel(
+                      isFreezer: _openSection == StorageSection.freezer,
+                    ),
+                  ),
 
-                if (!_fridgeOpen) _HintText(),
+                if (_openSection == null) _HintText(themeProvider),
               ],
             ),
           ),
@@ -74,6 +86,10 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _AppHeader extends StatelessWidget {
+  final ThemeProvider themeProvider;
+
+  const _AppHeader(this.themeProvider);
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -83,16 +99,20 @@ class _AppHeader extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('SmartFridge',
+              Text(themeProvider.getLocalizedString('app_title'),
                   style: GoogleFonts.exo2(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: Theme.of(context).textTheme.titleLarge?.color,
                   )),
-              Text('Управление продуктами',
+              Text(themeProvider.getLocalizedString('manage_products'),
                   style: GoogleFonts.nunito(
                     fontSize: 12,
-                    color: AppColors.textMuted,
+                    color: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.color
+                        ?.withOpacity(0.7),
                   )),
             ],
           ),
@@ -101,11 +121,11 @@ class _AppHeader extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.surface,
-              border: Border.all(color: AppColors.borderLight),
+              color: Theme.of(context).cardTheme.color,
+              border: Border.all(color: Theme.of(context).dividerColor),
             ),
             child: Icon(Icons.notifications_outlined,
-                color: AppColors.accent, size: 20),
+                color: Theme.of(context).colorScheme.primary, size: 20),
           ),
         ],
       ),
@@ -114,16 +134,21 @@ class _AppHeader extends StatelessWidget {
 }
 
 class _HintText extends StatelessWidget {
+  final ThemeProvider themeProvider;
+
+  const _HintText(this.themeProvider);
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         const SizedBox(height: 24),
         Text(
-          '↑ Нажмите на холодильник',
+          '↑ ${themeProvider.getLocalizedString('tap_to_open')}',
           style: GoogleFonts.nunito(
             fontSize: 14,
-            color: AppColors.textMuted,
+            color:
+                Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
           ),
         )
             .animate(onPlay: (c) => c.repeat(reverse: true))
@@ -149,7 +174,7 @@ class _BackgroundDecoration extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: RadialGradient(colors: [
-                AppColors.accent.withOpacity(0.08),
+                Theme.of(context).colorScheme.primary.withOpacity(0.08),
                 Colors.transparent,
               ]),
             ),
@@ -164,7 +189,7 @@ class _BackgroundDecoration extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: RadialGradient(colors: [
-                AppColors.accentDark.withOpacity(0.06),
+                Theme.of(context).colorScheme.primary.withOpacity(0.06),
                 Colors.transparent,
               ]),
             ),

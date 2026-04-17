@@ -8,6 +8,7 @@ import '../../services/api_service.dart';
 import '../../models/product_model.dart';
 import '../product/product_form_screen.dart';
 import '../../providers/product_provider.dart';
+import '../../providers/theme_provider.dart';
 
 /// Экран сканирования штрихкода
 class ScannerScreen extends StatefulWidget {
@@ -62,7 +63,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
       await context.read<ProductProvider>().loadProducts();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: AppColors.fresh,
+          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.8),
           content: Text('Продукт добавлен!',
               style: GoogleFonts.nunito(color: Colors.black87)),
         ),
@@ -76,7 +77,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
   void _showLoadingSnack(String code) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: AppColors.surface,
+        backgroundColor: Theme.of(context).cardTheme.color,
         content: Row(
           children: [
             SizedBox(
@@ -84,12 +85,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
               height: 16,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: AppColors.accent,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
             Text('Поиск: $code',
-                style: GoogleFonts.nunito(color: AppColors.textPrimary)),
+                style: GoogleFonts.nunito(color: Theme.of(context).textTheme.bodyLarge?.color)),
           ],
         ),
         duration: const Duration(seconds: 2),
@@ -99,8 +100,10 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // ─── Камера ───
@@ -148,7 +151,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                                 ? Icons.flashlight_on
                                 : Icons.flashlight_off,
                             color:
-                                _torchOn ? AppColors.warning : Colors.white70,
+                                _torchOn ? Theme.of(context).colorScheme.error : Colors.white70,
                             size: 20,
                           ),
                         ),
@@ -188,21 +191,21 @@ class _ScannerScreenState extends State<ScannerScreen> {
                     margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      color: AppColors.accent.withOpacity(0.15),
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(14),
                       border:
-                          Border.all(color: AppColors.accent.withOpacity(0.5)),
+                          Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.5)),
                     ),
                     child: Center(
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.edit_rounded,
-                              color: AppColors.accent, size: 16),
-                          const SizedBox(width: 8),
+                              color: Theme.of(context).colorScheme.primary, size: 16),
+                          SizedBox(width: 8),
                           Text('Добавить вручную',
                               style: GoogleFonts.exo2(
-                                color: AppColors.accent,
+                                color: Theme.of(context).colorScheme.primary,
                                 fontWeight: FontWeight.w600,
                               )),
                         ],
@@ -228,7 +231,7 @@ class _ScanOverlay extends StatelessWidget {
 
     return CustomPaint(
       size: size,
-      painter: _OverlayPainter(frameSize: frameSize),
+      painter: const _OverlayPainter(frameSize: frameSize),
       child: Center(
         child: SizedBox(
           width: frameSize,
@@ -238,7 +241,7 @@ class _ScanOverlay extends StatelessWidget {
               // Угловые уголки рамки
               ..._corners(frameSize),
               // Анимированная линия сканирования
-              _ScanLine(frameSize: frameSize),
+              const _ScanLine(frameSize: frameSize),
             ],
           ),
         ),
@@ -249,7 +252,7 @@ class _ScanOverlay extends StatelessWidget {
   List<Widget> _corners(double size) {
     const cornerSize = 24.0;
     const thickness = 3.0;
-    final color = AppColors.accent;
+    const color = AppColors.accent;
 
     Widget corner({required bool top, required bool left}) {
       return Positioned(
@@ -263,16 +266,16 @@ class _ScanOverlay extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border(
               top: top
-                  ? BorderSide(color: color, width: thickness)
+                  ? const BorderSide(color: color, width: thickness)
                   : BorderSide.none,
               bottom: !top
-                  ? BorderSide(color: color, width: thickness)
+                  ? const BorderSide(color: color, width: thickness)
                   : BorderSide.none,
               left: left
-                  ? BorderSide(color: color, width: thickness)
+                  ? const BorderSide(color: color, width: thickness)
                   : BorderSide.none,
               right: !left
-                  ? BorderSide(color: color, width: thickness)
+                  ? const BorderSide(color: color, width: thickness)
                   : BorderSide.none,
             ),
           ),
@@ -327,7 +330,7 @@ class _ScanLine extends StatelessWidget {
       child: Container(
         height: 2,
         width: frameSize,
-        color: AppColors.accent.withOpacity(0.8),
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
       ).animate(onPlay: (c) => c.repeat(reverse: true)).moveY(
             begin: 0,
             end: frameSize - 4,

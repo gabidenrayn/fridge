@@ -213,7 +213,7 @@ class ProductCard extends StatelessWidget {
                       onTap: onDelete,
                       child: Container(
                         padding: const EdgeInsets.all(6),
-                        child: Icon(
+                        child: const Icon(
                           Icons.delete_outline_rounded,
                           size: 18,
                           color: AppColors.textMuted,
