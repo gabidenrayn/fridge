@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/api_service.dart';
-import '../../models/product_model.dart';
 import '../product/product_form_screen.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/theme_provider.dart';
@@ -63,7 +62,8 @@ class _ScannerScreenState extends State<ScannerScreen> {
       await context.read<ProductProvider>().loadProducts();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.8),
+          backgroundColor:
+              Theme.of(context).colorScheme.primary.withOpacity(0.8),
           content: Text('Продукт добавлен!',
               style: GoogleFonts.nunito(color: Colors.black87)),
         ),
@@ -88,9 +88,10 @@ class _ScannerScreenState extends State<ScannerScreen> {
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Text('Поиск: $code',
-                style: GoogleFonts.nunito(color: Theme.of(context).textTheme.bodyLarge?.color)),
+                style: GoogleFonts.nunito(
+                    color: Theme.of(context).textTheme.bodyLarge?.color)),
           ],
         ),
         duration: const Duration(seconds: 2),
@@ -150,8 +151,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
                             _torchOn
                                 ? Icons.flashlight_on
                                 : Icons.flashlight_off,
-                            color:
-                                _torchOn ? Theme.of(context).colorScheme.error : Colors.white70,
+                            color: _torchOn
+                                ? Theme.of(context).colorScheme.error
+                                : Colors.white70,
                             size: 20,
                           ),
                         ),
@@ -191,18 +193,25 @@ class _ScannerScreenState extends State<ScannerScreen> {
                     margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.15),
                       borderRadius: BorderRadius.circular(14),
-                      border:
-                          Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.5)),
+                      border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.5)),
                     ),
                     child: Center(
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.edit_rounded,
-                              color: Theme.of(context).colorScheme.primary, size: 16),
-                          SizedBox(width: 8),
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 16),
+                          const SizedBox(width: 8),
                           Text('Добавить вручную',
                               style: GoogleFonts.exo2(
                                 color: Theme.of(context).colorScheme.primary,

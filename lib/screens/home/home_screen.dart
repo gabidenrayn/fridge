@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../core/constants/app_colors.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/theme_provider.dart';
 import 'widgets/fridge_widget.dart';
