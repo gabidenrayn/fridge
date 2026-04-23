@@ -12,9 +12,9 @@ import 'screens/stats/stats_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/account_screen.dart';
+import 'screens/recipe/recipe_screen.dart';
 import 'widgets/bottom_nav_bar.dart';
 
-/// Корневой виджет приложения
 class SmartFridgeApp extends StatelessWidget {
   const SmartFridgeApp({super.key});
 
@@ -53,7 +53,7 @@ class _AppContent extends StatelessWidget {
       title: 'SmartFridge',
       debugShowCheckedModeBanner: false,
 
-      // ── Светлая тема ────────────────────────────────────────────────────
+      // ── Светлая тема ──────────────────────────────────────────────
       theme: ThemeData(
         brightness: Brightness.light,
         scaffoldBackgroundColor: AppColors.lightBackground,
@@ -131,7 +131,7 @@ class _AppContent extends StatelessWidget {
         ),
       ),
 
-      // ── Тёмная тема (без изменений) ─────────────────────────────────────
+      // ── Тёмная тема ──────────────────────────────────────────────
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: AppColors.background,
@@ -187,7 +187,6 @@ class _AuthWrapper extends StatelessWidget {
   }
 }
 
-/// Корневой навигатор с нижней панелью
 class _RootNavigator extends StatefulWidget {
   const _RootNavigator();
 
@@ -204,6 +203,7 @@ class _RootNavigatorState extends State<_RootNavigator> {
     SearchScreen(),
     StatsScreen(),
     AccountScreen(),
+    RecipeScreen(), // ← новый экран рецептов
   ];
 
   @override

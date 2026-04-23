@@ -9,7 +9,6 @@ import 'widgets/inventory_panel.dart';
 
 enum StorageSection { fridge, freezer }
 
-/// Главный экран с холодильником и инвентарём
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -23,9 +22,15 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Загружаем продукты при старте
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProductProvider>().loadProducts();
+    });
+  }
+
+  void _onSectionTap(StorageSection? section) {
+    setState(() {
+      // Если нажали на уже открытую секцию — закрываем
+      _openSection = _openSection == section ? null : section;
     });
   }
 
@@ -38,23 +43,16 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
-          // ─── Фоновые декоративные круги ───
           _BackgroundDecoration(),
-
-          // ─── Основное содержимое ───
           SafeArea(
             child: Column(
               children: [
-                // Заголовок
                 _AppHeader(themeProvider),
-
-                // Единый холодильник с разделением
                 Expanded(
                   child: Center(
                     child: FridgeWidget(
                       openSection: _openSection,
-                      onSectionTap: (section) =>
-                          setState(() => _openSection = section),
+                      onSectionTap: _onSectionTap,
                       fridgeItems: provider.fridgeProducts.length,
                       freezerItems: provider.freezerProducts.length,
                       fridgeExpiring: provider.fridgeProducts
@@ -66,14 +64,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-
                 if (_openSection != null)
                   Expanded(
                     child: InventoryPanel(
                       isFreezer: _openSection == StorageSection.freezer,
                     ),
                   ),
-
                 if (_openSection == null) _HintText(themeProvider),
               ],
             ),
@@ -86,7 +82,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _AppHeader extends StatelessWidget {
   final ThemeProvider themeProvider;
-
   const _AppHeader(this.themeProvider);
 
   @override
@@ -98,21 +93,25 @@ class _AppHeader extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(themeProvider.getLocalizedString('app_title'),
-                  style: GoogleFonts.exo2(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).textTheme.titleLarge?.color,
-                  )),
-              Text(themeProvider.getLocalizedString('manage_products'),
-                  style: GoogleFonts.nunito(
-                    fontSize: 12,
-                    color: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.color
-                        ?.withOpacity(0.7),
-                  )),
+              Text(
+                themeProvider.getLocalizedString('app_title'),
+                style: GoogleFonts.exo2(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).textTheme.titleLarge?.color,
+                ),
+              ),
+              Text(
+                themeProvider.getLocalizedString('manage_products'),
+                style: GoogleFonts.nunito(
+                  fontSize: 12,
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.color
+                      ?.withOpacity(0.7),
+                ),
+              ),
             ],
           ),
           const Spacer(),
@@ -123,8 +122,11 @@ class _AppHeader extends StatelessWidget {
               color: Theme.of(context).cardTheme.color,
               border: Border.all(color: Theme.of(context).dividerColor),
             ),
-            child: Icon(Icons.notifications_outlined,
-                color: Theme.of(context).colorScheme.primary, size: 20),
+            child: Icon(
+              Icons.notifications_outlined,
+              color: Theme.of(context).colorScheme.primary,
+              size: 20,
+            ),
           ),
         ],
       ),
@@ -134,7 +136,6 @@ class _AppHeader extends StatelessWidget {
 
 class _HintText extends StatelessWidget {
   final ThemeProvider themeProvider;
-
   const _HintText(this.themeProvider);
 
   @override
@@ -154,6 +155,7 @@ class _HintText extends StatelessWidget {
             .fadeIn(duration: 1000.ms)
             .then(delay: 500.ms)
             .fadeOut(duration: 1000.ms),
+        const SizedBox(height: 16),
       ],
     );
   }

@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Провайдер темы приложения
 class ThemeProvider extends ChangeNotifier {
   static const String _themeKey = 'theme_mode';
   static const String _languageKey = 'language';
 
   ThemeMode _themeMode = ThemeMode.dark;
-  String _language = 'ru'; // 'ru' или 'en'
+  String _language = 'ru';
 
   ThemeMode get themeMode => _themeMode;
   String get language => _language;
@@ -23,7 +22,6 @@ class ThemeProvider extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final themeString = prefs.getString(_themeKey) ?? 'dark';
     final languageString = prefs.getString(_languageKey) ?? 'ru';
-
     _themeMode = themeString == 'light' ? ThemeMode.light : ThemeMode.dark;
     _language = languageString;
     notifyListeners();
@@ -32,7 +30,6 @@ class ThemeProvider extends ChangeNotifier {
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
     notifyListeners();
-
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
         _themeKey, mode == ThemeMode.light ? 'light' : 'dark');
@@ -45,12 +42,10 @@ class ThemeProvider extends ChangeNotifier {
   Future<void> setLanguage(String language) async {
     _language = language;
     notifyListeners();
-
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_languageKey, language);
   }
 
-  /// Получить локализованную строку
   String getLocalizedString(String key) {
     final strings = _language == 'ru' ? _ruStrings : _enStrings;
     return strings[key] ?? key;
@@ -68,7 +63,7 @@ class ThemeProvider extends ChangeNotifier {
     'theme': 'Тема',
     'language': 'Язык',
     'light_theme': 'Светлая',
-    'dark_theme': 'Темная',
+    'dark_theme': 'Тёмная',
     'russian': 'Русский',
     'english': 'English',
     'logout': 'Выйти',
@@ -92,6 +87,44 @@ class ThemeProvider extends ChangeNotifier {
     'scan': 'Сканировать',
     'stats': 'Статистика',
     'home': 'Главная',
+    'recipes': 'Рецепты',
+    // Инвентарь
+    'inventory': 'ИНВЕНТАРЬ',
+    'items': 'предметов',
+    'fridge_empty': 'Холодильник пуст',
+    'add_via_scanner': 'Добавьте продукты через сканер\nили кнопку «+»',
+    'delete_confirm': 'Удалить?',
+    'delete_product': 'будет удалён.',
+    'all': 'Все',
+    'fresh': 'свежих',
+    'expiring': 'скоро',
+    'expired': 'просрочено',
+    // Поиск
+    'search_hint': 'Название продукта...',
+    'search_results': 'Результаты',
+    'not_found': 'Ничего не найдено',
+    // Статистика
+    'total_products': 'Всего продуктов',
+    'expiring_soon': 'Скоро истекает',
+    'expired_count': 'Просрочено',
+    // Аккаунт
+    'profile': 'Профиль',
+    'notifications': 'Уведомления',
+    // Рецепты
+    'find_recipe': 'Подобрать рецепт',
+    'finding_recipe': 'Ищем рецепт...',
+    'roll_hint': 'Нажмите кубик',
+    'roll_description': 'Подберём рецепт из ваших\nпродуктов в холодильнике',
+    'another_recipe': 'Другой продукт',
+    'today_cook': '🎲 СЕГОДНЯ ГОТОВИМ',
+    'expiry_title': 'СРОКИ ИСТЕЧЕНИЯ',
+    'fridge_empty_hint':
+        'Холодильник пуст!\nДобавьте продукты чтобы получить рецепт.',
+    'no_internet':
+        'Не удалось загрузить рецепт.\nПроверьте интернет-соединение.',
+    'ingredients': '🧂 Ингредиенты',
+    'cooking': '👨‍🍳 Приготовление',
+    'empty_fridge_timeline': '🧊 Холодильник пуст',
   };
 
   static const Map<String, String> _enStrings = {
@@ -130,5 +163,41 @@ class ThemeProvider extends ChangeNotifier {
     'scan': 'Scan',
     'stats': 'Statistics',
     'home': 'Home',
+    'recipes': 'Recipes',
+    // Inventory
+    'inventory': 'INVENTORY',
+    'items': 'items',
+    'fridge_empty': 'Fridge is empty',
+    'add_via_scanner': 'Add products via scanner\nor the «+» button',
+    'delete_confirm': 'Delete?',
+    'delete_product': 'will be deleted.',
+    'all': 'All',
+    'fresh': 'fresh',
+    'expiring': 'expiring',
+    'expired': 'expired',
+    // Search
+    'search_hint': 'Product name...',
+    'search_results': 'Results',
+    'not_found': 'Nothing found',
+    // Stats
+    'total_products': 'Total products',
+    'expiring_soon': 'Expiring soon',
+    'expired_count': 'Expired',
+    // Account
+    'profile': 'Profile',
+    'notifications': 'Notifications',
+    // Recipes
+    'find_recipe': 'Find a recipe',
+    'finding_recipe': 'Finding recipe...',
+    'roll_hint': 'Press the dice',
+    'roll_description': 'We\'ll find a recipe from your\nfridge products',
+    'another_recipe': 'Another product',
+    'today_cook': '🎲 TODAY WE COOK',
+    'expiry_title': 'EXPIRY TIMELINE',
+    'fridge_empty_hint': 'Fridge is empty!\nAdd products to get a recipe.',
+    'no_internet': 'Failed to load recipe.\nCheck your internet connection.',
+    'ingredients': '🧂 Ingredients',
+    'cooking': '👨‍🍳 Cooking steps',
+    'empty_fridge_timeline': '🧊 Fridge is empty',
   };
 }

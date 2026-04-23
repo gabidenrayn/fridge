@@ -364,8 +364,9 @@ class _AccountScreenState extends State<AccountScreen> {
                                       fontSize: 13,
                                     ),
                                     onChanged: (String? newValue) {
-                                      if (newValue != null)
+                                      if (newValue != null) {
                                         themeProvider.setLanguage(newValue);
+                                      }
                                     },
                                     items: [
                                       DropdownMenuItem(
