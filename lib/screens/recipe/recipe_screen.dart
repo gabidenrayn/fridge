@@ -7,7 +7,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
-import '../../models/product_model.dart';
 import '../../providers/product_provider.dart';
 
 class RecipeScreen extends StatefulWidget {
@@ -442,7 +441,7 @@ class _RecipeView extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Ингредиенты
-          _SectionTitle('🧂 Ингредиенты'),
+          const _SectionTitle('🧂 Ингредиенты'),
           const SizedBox(height: 10),
           ...recipe.ingredients.asMap().entries.map(
                 (e) => _IngredientRow(
@@ -454,7 +453,7 @@ class _RecipeView extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Шаги
-          _SectionTitle('👨‍🍳 Приготовление'),
+          const _SectionTitle('👨‍🍳 Приготовление'),
           const SizedBox(height: 10),
           ...recipe.steps.asMap().entries.map(
                 (e) => _StepRow(

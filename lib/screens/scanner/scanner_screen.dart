@@ -7,7 +7,6 @@ import '../../core/constants/app_colors.dart';
 import '../../services/api_service.dart';
 import '../product/product_form_screen.dart';
 import '../../providers/product_provider.dart';
-import '../../providers/theme_provider.dart';
 
 /// Экран сканирования штрихкода
 class ScannerScreen extends StatefulWidget {
@@ -101,8 +100,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = context.watch<ThemeProvider>();
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(

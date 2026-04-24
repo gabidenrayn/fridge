@@ -115,17 +115,19 @@ class _FridgeWidgetState extends State<FridgeWidget>
           Positioned(
             top: 0,
             left: 0,
-            child: AnimatedBuilder(
-              animation: _fridgeDoorAngle,
-              builder: (context, _) => Transform(
-                alignment: Alignment.centerLeft,
-                transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.001)
-                  ..rotateY(_fridgeDoorAngle.value),
-                child: _FridgeDoorSection(
-                  width: widget.width,
-                  height: fridgeH,
-                  isDark: isDark,
+            child: IgnorePointer(
+              child: AnimatedBuilder(
+                animation: _fridgeDoorAngle,
+                builder: (context, _) => Transform(
+                  alignment: Alignment.centerLeft,
+                  transform: Matrix4.identity()
+                    ..setEntry(3, 2, 0.001)
+                    ..rotateY(_fridgeDoorAngle.value),
+                  child: _FridgeDoorSection(
+                    width: widget.width,
+                    height: fridgeH,
+                    isDark: isDark,
+                  ),
                 ),
               ),
             ),
@@ -135,17 +137,19 @@ class _FridgeWidgetState extends State<FridgeWidget>
           Positioned(
             top: fridgeH,
             left: 0,
-            child: AnimatedBuilder(
-              animation: _freezerDoorAngle,
-              builder: (context, _) => Transform(
-                alignment: Alignment.centerLeft,
-                transform: Matrix4.identity()
-                  ..setEntry(3, 2, 0.001)
-                  ..rotateY(_freezerDoorAngle.value),
-                child: _FreezerDoorSection(
-                  width: widget.width,
-                  height: freezerH,
-                  isDark: isDark,
+            child: IgnorePointer(
+              child: AnimatedBuilder(
+                animation: _freezerDoorAngle,
+                builder: (context, _) => Transform(
+                  alignment: Alignment.centerLeft,
+                  transform: Matrix4.identity()
+                    ..setEntry(3, 2, 0.001)
+                    ..rotateY(_freezerDoorAngle.value),
+                  child: _FreezerDoorSection(
+                    width: widget.width,
+                    height: freezerH,
+                    isDark: isDark,
+                  ),
                 ),
               ),
             ),
