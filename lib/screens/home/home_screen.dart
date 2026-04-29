@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../recipe/recipe_screen.dart';
 import 'widgets/fridge_widget.dart';
 import 'widgets/inventory_panel.dart';
 
@@ -120,17 +121,25 @@ class _AppHeader extends StatelessWidget {
             ],
           ),
           const Spacer(),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Theme.of(context).cardTheme.color,
-              border: Border.all(color: Theme.of(context).dividerColor),
-            ),
-            child: Icon(
-              Icons.notifications_outlined,
-              color: Theme.of(context).colorScheme.primary,
-              size: 20,
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const RecipeScreen()),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Theme.of(context).cardTheme.color,
+                border: Border.all(color: Theme.of(context).dividerColor),
+              ),
+              child: Icon(
+                Icons.restaurant_menu_rounded,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
             ),
           ),
         ],

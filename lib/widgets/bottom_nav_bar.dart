@@ -21,9 +21,6 @@ class AppBottomNavBar extends StatelessWidget {
 
     final items = [
       _NavItem(
-          icon: Icons.kitchen_rounded,
-          label: themeProvider.getLocalizedString('home')),
-      _NavItem(
           icon: Icons.qr_code_scanner_rounded,
           label: themeProvider.getLocalizedString('scan')),
       _NavItem(
@@ -35,9 +32,6 @@ class AppBottomNavBar extends StatelessWidget {
       _NavItem(
           icon: Icons.account_circle_rounded,
           label: themeProvider.getLocalizedString('account')),
-      _NavItem(
-          icon: Icons.restaurant_menu_rounded,
-          label: themeProvider.getLocalizedString('recipes')),
     ];
 
     final bgColor = isDark ? AppColors.surface : AppColors.lightSurface;
@@ -63,50 +57,133 @@ class AppBottomNavBar extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: List.generate(items.length, (i) {
-          final item = items[i];
-          final isSelected = i == currentIndex;
-          return GestureDetector(
-            onTap: () => onTap(i),
+        children: [
+          // Left side items
+          ...List.generate(2, (i) {
+            final item = items[i];
+            final isSelected = i == currentIndex - 1;
+            return GestureDetector(
+              onTap: () => onTap(i + 1),
+              behavior: HitTestBehavior.opaque,
+              child: SizedBox(
+                width: 60,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? accentColor.withOpacity(0.15)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        item.icon,
+                        size: 22,
+                        color: isSelected ? accentColor : mutedColor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      item.label,
+                      style: GoogleFonts.exo2(
+                        fontSize: 9,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w400,
+                        color: isSelected ? accentColor : mutedColor,
+                        letterSpacing: 0.5,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+          
+          // Center home button
+          GestureDetector(
+            onTap: () => onTap(0),
             behavior: HitTestBehavior.opaque,
-            child: SizedBox(
-              width: 60,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? accentColor.withOpacity(0.15)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      item.icon,
-                      size: 22,
-                      color: isSelected ? accentColor : mutedColor,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    item.label,
-                    style: GoogleFonts.exo2(
-                      fontSize: 9,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w400,
-                      color: isSelected ? accentColor : mutedColor,
-                      letterSpacing: 0.5,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+            child: Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: currentIndex == 0
+                    ? accentColor.withOpacity(0.15)
+                    : accentColor.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: currentIndex == 0
+                      ? accentColor.withOpacity(0.3)
+                      : accentColor.withOpacity(0.2),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: accentColor.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
+              child: Icon(
+                Icons.kitchen_rounded,
+                size: 28,
+                color: currentIndex == 0 ? accentColor : accentColor.withOpacity(0.8),
+              ),
             ),
-          );
-        }),
+          ),
+          
+          // Right side items
+          ...List.generate(2, (i) {
+            final item = items[i + 2];
+            final isSelected = i + 3 == currentIndex;
+            return GestureDetector(
+              onTap: () => onTap(i + 3),
+              behavior: HitTestBehavior.opaque,
+              child: SizedBox(
+                width: 60,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? accentColor.withOpacity(0.15)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        item.icon,
+                        size: 22,
+                        color: isSelected ? accentColor : mutedColor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      item.label,
+                      style: GoogleFonts.exo2(
+                        fontSize: 9,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w400,
+                        color: isSelected ? accentColor : mutedColor,
+                        letterSpacing: 0.5,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
       ),
     );
   }

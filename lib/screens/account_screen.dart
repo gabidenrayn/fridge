@@ -5,6 +5,8 @@ import '../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
 import '../models/account_model.dart';
 import '../core/constants/app_colors.dart';
+import 'family/family_management_screen.dart';
+import 'family/family_request_screen.dart';
 
 /// Экран управления аккаунтом
 class AccountScreen extends StatefulWidget {
@@ -388,7 +390,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         ),
                       ),
 
-                      // ── Создать семейный аккаунт ─────────────────────────
+                      // ── Создать семейный аккаунт// ---- Create family account ------
                       if (account.type == AccountType.personal) ...[
                         const SizedBox(height: 12),
                         _SectionCard(
@@ -398,7 +400,7 @@ class _AccountScreenState extends State<AccountScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _SectionTitle(
-                                title: 'Семейный аккаунт',
+                                title: 'Family Account',
                                 icon: Icons.group_add_outlined,
                                 accent: accent,
                               ),
@@ -411,8 +413,8 @@ class _AccountScreenState extends State<AccountScreen> {
                                       : AppColors.lightTextPrimary,
                                 ),
                                 decoration: const InputDecoration(
-                                  labelText: 'Название семьи',
-                                  hintText: 'Например: Семья Ивановых',
+                                  labelText: 'Family Name',
+                                  hintText: 'e.g., The Smith Family',
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -421,7 +423,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                 child: ElevatedButton.icon(
                                   onPressed: _createFamilyAccount,
                                   icon: const Icon(Icons.add_rounded, size: 18),
-                                  label: const Text('Создать'),
+                                  label: const Text('Create'),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: accent,
                                     foregroundColor: Colors.white,
@@ -433,12 +435,36 @@ class _AccountScreenState extends State<AccountScreen> {
                                   ),
                                 ),
                               ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const FamilyRequestScreen(),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.search_rounded, size: 18),
+                                  label: const Text('Join Family'),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    side: BorderSide(color: accent),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
                       ],
 
-                      // ── Добавить члена семьи ──────────────────────────────
+                      // ── Добавить члена семьи// ---- Add family member ------
                       if (account.type == AccountType.family &&
                           account.ownerId == user.id) ...[
                         const SizedBox(height: 12),
@@ -449,7 +475,7 @@ class _AccountScreenState extends State<AccountScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _SectionTitle(
-                                title: 'Добавить участника',
+                                title: 'Add Member',
                                 icon: Icons.person_add_outlined,
                                 accent: accent,
                               ),
@@ -463,7 +489,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                       : AppColors.lightTextPrimary,
                                 ),
                                 decoration: const InputDecoration(
-                                  labelText: 'Email участника',
+                                  labelText: 'Member Email',
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -473,7 +499,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                   onPressed: _addFamilyMember,
                                   icon: const Icon(Icons.person_add_rounded,
                                       size: 18),
-                                  label: const Text('Добавить'),
+                                  label: const Text('Add'),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: accent,
                                     foregroundColor: Colors.white,
@@ -482,6 +508,30 @@ class _AccountScreenState extends State<AccountScreen> {
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const FamilyManagementScreen(),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.manage_accounts_rounded, size: 18),
+                                  label: const Text('Manage Requests'),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    side: BorderSide(color: accent),
                                   ),
                                 ),
                               ),

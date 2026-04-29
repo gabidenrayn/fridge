@@ -12,7 +12,6 @@ import 'screens/stats/stats_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/account_screen.dart';
-import 'screens/recipe/recipe_screen.dart';
 import 'widgets/bottom_nav_bar.dart';
 
 class SmartFridgeApp extends StatelessWidget {
@@ -203,7 +202,6 @@ class _RootNavigatorState extends State<_RootNavigator> {
     SearchScreen(),
     StatsScreen(),
     AccountScreen(),
-    RecipeScreen(), // ← новый экран рецептов
   ];
 
   @override

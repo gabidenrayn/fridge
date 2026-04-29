@@ -233,6 +233,23 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       child: Row(
         children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Theme.of(context).cardTheme.color,
+                border: Border.all(color: Theme.of(context).dividerColor),
+              ),
+              child: Icon(
+                Icons.arrow_back,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
