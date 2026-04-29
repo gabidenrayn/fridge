@@ -20,29 +20,29 @@ class ProductCard extends StatelessWidget {
     this.index = 0,
   });
 
-  Color get _statusColor {
+  Color _getStatusColor(bool isDark) {
     switch (product.freshnessStatus) {
       case 0:
-        return AppColors.fresh;
+        return isDark ? AppColors.fresh : AppColors.lightFresh;
       case 1:
-        return AppColors.warning;
+        return isDark ? AppColors.warning : AppColors.lightWarning;
       case 2:
-        return AppColors.expired;
+        return isDark ? AppColors.expired : AppColors.lightExpired;
       default:
-        return AppColors.fresh;
+        return isDark ? AppColors.fresh : AppColors.lightFresh;
     }
   }
 
-  Color get _statusBg {
+  Color _getStatusBg(bool isDark) {
     switch (product.freshnessStatus) {
       case 0:
-        return AppColors.freshBg;
+        return isDark ? AppColors.freshBg : AppColors.lightFreshBg;
       case 1:
-        return AppColors.warningBg;
+        return isDark ? AppColors.warningBg : AppColors.lightWarningBg;
       case 2:
-        return AppColors.expiredBg;
+        return isDark ? AppColors.expiredBg : AppColors.lightExpiredBg;
       default:
-        return AppColors.freshBg;
+        return isDark ? AppColors.freshBg : AppColors.lightFreshBg;
     }
   }
 
@@ -61,20 +61,31 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final statusColor = _getStatusColor(isDark);
+    final statusBg = _getStatusBg(isDark);
+    final cardBgColor = isDark ? AppColors.cardBg : AppColors.lightCardBg;
+    final textPrimaryColor =
+        isDark ? AppColors.textPrimary : AppColors.lightTextPrimary;
+    final textSecondaryColor =
+        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+    final textMutedColor =
+        isDark ? AppColors.textMuted : AppColors.lightTextMuted;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
-          color: AppColors.cardBg,
+          color: cardBgColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: _statusColor.withOpacity(0.3),
+            color: statusColor.withOpacity(0.3),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: _statusColor.withOpacity(0.08),
+              color: statusColor.withOpacity(0.08),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -90,7 +101,7 @@ class ProductCard extends StatelessWidget {
               child: Container(
                 width: 3,
                 decoration: BoxDecoration(
-                  color: _statusColor,
+                  color: statusColor,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     bottomLeft: Radius.circular(12),
@@ -108,10 +119,10 @@ class ProductCard extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: _statusBg,
+                      color: statusBg,
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: _statusColor.withOpacity(0.3),
+                        color: statusColor.withOpacity(0.3),
                       ),
                     ),
                     child: Center(
@@ -136,7 +147,7 @@ class ProductCard extends StatelessWidget {
                                 style: GoogleFonts.exo2(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary,
+                                  color: textPrimaryColor,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -147,10 +158,10 @@ class ProductCard extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 7, vertical: 3),
                               decoration: BoxDecoration(
-                                color: _statusBg,
+                                color: statusBg,
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                  color: _statusColor.withOpacity(0.5),
+                                  color: statusColor.withOpacity(0.5),
                                 ),
                               ),
                               child: Text(
@@ -158,7 +169,7 @@ class ProductCard extends StatelessWidget {
                                 style: GoogleFonts.exo2(
                                   fontSize: 9,
                                   fontWeight: FontWeight.w700,
-                                  color: _statusColor,
+                                  color: statusColor,
                                   letterSpacing: 0.8,
                                 ),
                               ),
@@ -171,14 +182,14 @@ class ProductCard extends StatelessWidget {
                             Icon(
                               Icons.schedule_rounded,
                               size: 11,
-                              color: _statusColor.withOpacity(0.8),
+                              color: statusColor.withOpacity(0.8),
                             ),
                             const SizedBox(width: 4),
                             Text(
                               AppDateUtils.getExpiryLabel(product.expiryDate),
                               style: GoogleFonts.nunito(
                                 fontSize: 11,
-                                color: _statusColor,
+                                color: statusColor,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -187,7 +198,7 @@ class ProductCard extends StatelessWidget {
                               '${product.quantity} ${product.unit}',
                               style: GoogleFonts.exo2(
                                 fontSize: 12,
-                                color: AppColors.textSecondary,
+                                color: textSecondaryColor,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -199,7 +210,7 @@ class ProductCard extends StatelessWidget {
                             product.brand!,
                             style: GoogleFonts.nunito(
                               fontSize: 11,
-                              color: AppColors.textMuted,
+                              color: textMutedColor,
                             ),
                           ),
                         ],
@@ -213,10 +224,10 @@ class ProductCard extends StatelessWidget {
                       onTap: onDelete,
                       child: Container(
                         padding: const EdgeInsets.all(6),
-                        child: const Icon(
+                        child: Icon(
                           Icons.delete_outline_rounded,
                           size: 18,
-                          color: AppColors.textMuted,
+                          color: textMutedColor,
                         ),
                       ),
                     ),

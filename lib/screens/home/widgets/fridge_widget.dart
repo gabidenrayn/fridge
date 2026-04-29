@@ -103,10 +103,14 @@ class _FridgeWidgetState extends State<FridgeWidget>
             fridgeItems: widget.fridgeItems,
             freezerItems: widget.freezerItems,
             onFridgeTap: () => widget.onSectionTap(
-              widget.openSection == StorageSection.fridge ? null : StorageSection.fridge,
+              widget.openSection == StorageSection.fridge
+                  ? null
+                  : StorageSection.fridge,
             ),
             onFreezerTap: () => widget.onSectionTap(
-              widget.openSection == StorageSection.freezer ? null : StorageSection.freezer,
+              widget.openSection == StorageSection.freezer
+                  ? null
+                  : StorageSection.freezer,
             ),
             isDark: isDark,
           ),
@@ -180,19 +184,29 @@ class _ExpiryBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final warningColor = isDark ? AppColors.warning : AppColors.lightWarning;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.warning,
+        color: warningColor,
         borderRadius: BorderRadius.circular(10),
-        boxShadow: [BoxShadow(color: AppColors.warning.withOpacity(0.4), blurRadius: 8)],
+        boxShadow: [
+          BoxShadow(color: warningColor.withOpacity(0.4), blurRadius: 8)
+        ],
       ),
       child: Text(
         '$count',
-        style: GoogleFonts.exo2(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.black87),
+        style: GoogleFonts.exo2(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: isDark ? Colors.black87 : Colors.white,
+        ),
       ),
-    ).animate(onPlay: (c) => c.repeat(reverse: true))
-        .scale(begin: const Offset(1, 1), end: const Offset(1.1, 1.1), duration: 800.ms);
+    ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+        begin: const Offset(1, 1),
+        end: const Offset(1.1, 1.1),
+        duration: 800.ms);
   }
 }
 
@@ -204,9 +218,15 @@ class _FridgeBody extends StatelessWidget {
   final bool isDark;
 
   const _FridgeBody({
-    required this.width, required this.fridgeH, required this.freezerH,
-    required this.openSection, required this.fridgeItems, required this.freezerItems,
-    required this.onFridgeTap, required this.onFreezerTap, required this.isDark,
+    required this.width,
+    required this.fridgeH,
+    required this.freezerH,
+    required this.openSection,
+    required this.fridgeItems,
+    required this.freezerItems,
+    required this.onFridgeTap,
+    required this.onFreezerTap,
+    required this.isDark,
   });
 
   @override
@@ -237,13 +257,17 @@ class _FridgeBody extends StatelessWidget {
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(isDark ? 0.4 : 0.08),
-                  blurRadius: 16, offset: const Offset(4, 8),
+                  blurRadius: 16,
+                  offset: const Offset(4, 8),
                 ),
               ],
             ),
             child: openSection == StorageSection.fridge
                 ? _FridgeInner(totalItems: fridgeItems, isDark: isDark)
-                : _ClosedLabel(label: 'Холодильник', icon: Icons.kitchen_rounded, isDark: isDark),
+                : _ClosedLabel(
+                    label: 'Холодильник',
+                    icon: Icons.kitchen_rounded,
+                    isDark: isDark),
           ),
         ),
 
@@ -255,20 +279,24 @@ class _FridgeBody extends StatelessWidget {
             color: rimColor,
             border: Border.symmetric(
               horizontal: BorderSide(
-                color: isDark ? Colors.black26 : Colors.white54, width: 2,
+                color: isDark ? Colors.black26 : Colors.white54,
+                width: 2,
               ),
             ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(5, (i) => Container(
-              margin: const EdgeInsets.symmetric(horizontal: 8),
-              width: 4, height: 4,
-              decoration: BoxDecoration(
-                color: isDark ? Colors.black26 : Colors.white70,
-                shape: BoxShape.circle,
-              ),
-            )),
+            children: List.generate(
+                5,
+                (i) => Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.black26 : Colors.white70,
+                        shape: BoxShape.circle,
+                      ),
+                    )),
           ),
         ),
 
@@ -294,15 +322,18 @@ class _FridgeBody extends StatelessWidget {
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(isDark ? 0.4 : 0.08),
-                  blurRadius: 16, offset: const Offset(4, 8),
+                  blurRadius: 16,
+                  offset: const Offset(4, 8),
                 ),
               ],
             ),
             child: openSection == StorageSection.freezer
                 ? _FreezerInner(totalItems: freezerItems, isDark: isDark)
                 : _ClosedLabel(
-                    label: 'Морозильник', icon: Icons.ac_unit_rounded,
-                    isDark: isDark, isFreezer: true,
+                    label: 'Морозильник',
+                    icon: Icons.ac_unit_rounded,
+                    isDark: isDark,
+                    isFreezer: true,
                   ),
           ),
         ),
@@ -318,7 +349,10 @@ class _ClosedLabel extends StatelessWidget {
   final bool isFreezer;
 
   const _ClosedLabel({
-    required this.label, required this.icon, required this.isDark, this.isFreezer = false,
+    required this.label,
+    required this.icon,
+    required this.isDark,
+    this.isFreezer = false,
   });
 
   @override
@@ -333,9 +367,12 @@ class _ClosedLabel extends StatelessWidget {
         children: [
           Icon(icon, color: accent.withOpacity(0.5), size: 26),
           const SizedBox(height: 6),
-          Text(label, style: GoogleFonts.exo2(
-            color: accent.withOpacity(0.7), fontSize: 12, fontWeight: FontWeight.w600,
-          )),
+          Text(label,
+              style: GoogleFonts.exo2(
+                color: accent.withOpacity(0.7),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              )),
         ],
       ),
     );
@@ -369,9 +406,12 @@ class _FridgeInner extends StatelessWidget {
             if (i < 2) const SizedBox(height: 6),
           ],
           const Spacer(),
-          Text('$totalItems продуктов', style: GoogleFonts.exo2(
-            fontSize: 8, color: Theme.of(context).colorScheme.primary, letterSpacing: 0.8,
-          )),
+          Text('$totalItems продуктов',
+              style: GoogleFonts.exo2(
+                fontSize: 8,
+                color: Theme.of(context).colorScheme.primary,
+                letterSpacing: 0.8,
+              )),
         ],
       ),
     );
@@ -402,9 +442,12 @@ class _FreezerInner extends StatelessWidget {
           const SizedBox(height: 6),
           _FreezerShelf(isDark: isDark),
           const Spacer(),
-          Text('$totalItems продуктов', style: GoogleFonts.exo2(
-            fontSize: 7, color: Theme.of(context).colorScheme.primary, letterSpacing: 0.8,
-          )),
+          Text('$totalItems продуктов',
+              style: GoogleFonts.exo2(
+                fontSize: 7,
+                color: Theme.of(context).colorScheme.primary,
+                letterSpacing: 0.8,
+              )),
         ],
       ),
     );
@@ -418,7 +461,12 @@ class _FridgeShelf extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shelfColor = isDark ? const Color(0xFF2A5298) : const Color(0xFFBAD4F7);
+    final shelfColor =
+        isDark ? const Color(0xFF2A5298) : const Color(0xFFBAD4F7);
+    final freshColor = isDark ? AppColors.fresh : AppColors.lightFresh;
+    final warningColor = isDark ? AppColors.warning : AppColors.lightWarning;
+    final accentColor = isDark ? AppColors.accent : AppColors.lightAccent;
+
     return Container(
       height: 28,
       decoration: BoxDecoration(
@@ -428,10 +476,16 @@ class _FridgeShelf extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(4, (i) => _ShelfItem(
-          color: [AppColors.fresh, AppColors.warning, AppColors.fresh, AppColors.accent]
-              [(index * 4 + i) % 4],
-        )),
+        children: List.generate(
+            4,
+            (i) => _ShelfItem(
+                  color: [
+                    freshColor,
+                    warningColor,
+                    freshColor,
+                    accentColor
+                  ][(index * 4 + i) % 4],
+                )),
       ),
     );
   }
@@ -443,7 +497,12 @@ class _FreezerShelf extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shelfColor = isDark ? const Color(0xFF2A5298) : const Color(0xFFC4B5FD);
+    final shelfColor =
+        isDark ? const Color(0xFF2A5298) : const Color(0xFFC4B5FD);
+    final freshColor = isDark ? AppColors.fresh : AppColors.lightFresh;
+    final warningColor = isDark ? AppColors.warning : AppColors.lightWarning;
+    final accentColor = isDark ? AppColors.accent : AppColors.lightAccent;
+
     return Container(
       height: 20,
       decoration: BoxDecoration(
@@ -453,9 +512,11 @@ class _FreezerShelf extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(3, (i) => _ShelfItem(
-          color: [AppColors.fresh, AppColors.warning, AppColors.accent][i % 3],
-        )),
+        children: List.generate(
+            3,
+            (i) => _ShelfItem(
+                  color: [freshColor, warningColor, accentColor][i % 3],
+                )),
       ),
     );
   }
@@ -468,7 +529,8 @@ class _ShelfItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 16, height: 16,
+      width: 16,
+      height: 16,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(3),
         color: color.withOpacity(0.3),
@@ -481,22 +543,27 @@ class _ShelfItem extends StatelessWidget {
 class _FridgeDoorSection extends StatelessWidget {
   final double width, height;
   final bool isDark;
-  const _FridgeDoorSection({required this.width, required this.height, required this.isDark});
+  const _FridgeDoorSection(
+      {required this.width, required this.height, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
     final rimColor = isDark ? AppColors.borderLight : const Color(0xFF93C5FD);
-    final handleColor = isDark ? AppColors.fridgeHandle : const Color(0xFF93C5FD);
+    final handleColor =
+        isDark ? AppColors.fridgeHandle : const Color(0xFF93C5FD);
     final accentColor = isDark ? AppColors.accent : const Color(0xFF2563EB);
 
     return Container(
-      width: width, height: height,
+      width: width,
+      height: height,
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20), topRight: Radius.circular(20),
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
         ),
         gradient: LinearGradient(
-          begin: Alignment.topLeft, end: Alignment.bottomRight,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
           colors: isDark
               ? [const Color(0xFF2A5298), const Color(0xFF1A3A6B)]
               : [const Color(0xFFDCEAFF), const Color(0xFFBFDBFE)],
@@ -505,14 +572,19 @@ class _FridgeDoorSection extends StatelessWidget {
       ),
       child: Stack(children: [
         Positioned(
-          right: 14, top: 0, bottom: 0,
+          right: 14,
+          top: 0,
+          bottom: 0,
           child: Center(
             child: Container(
-              width: 7, height: height * 0.38,
+              width: 7,
+              height: height * 0.38,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(4),
                 color: handleColor,
-                boxShadow: [BoxShadow(color: accentColor.withOpacity(0.4), blurRadius: 6)],
+                boxShadow: [
+                  BoxShadow(color: accentColor.withOpacity(0.4), blurRadius: 6)
+                ],
               ),
             ),
           ),
@@ -522,18 +594,23 @@ class _FridgeDoorSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 44, height: 44,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: accentColor.withOpacity(0.1),
                   border: Border.all(color: accentColor.withOpacity(0.4)),
                 ),
-                child: Icon(Icons.kitchen_rounded, color: accentColor, size: 22),
+                child:
+                    Icon(Icons.kitchen_rounded, color: accentColor, size: 22),
               ),
               const SizedBox(height: 8),
-              Text('Холодильник', style: GoogleFonts.exo2(
-                fontSize: 11, color: accentColor.withOpacity(0.8), fontWeight: FontWeight.w600,
-              )),
+              Text('Холодильник',
+                  style: GoogleFonts.exo2(
+                    fontSize: 11,
+                    color: accentColor.withOpacity(0.8),
+                    fontWeight: FontWeight.w600,
+                  )),
             ],
           ),
         ),
@@ -545,22 +622,27 @@ class _FridgeDoorSection extends StatelessWidget {
 class _FreezerDoorSection extends StatelessWidget {
   final double width, height;
   final bool isDark;
-  const _FreezerDoorSection({required this.width, required this.height, required this.isDark});
+  const _FreezerDoorSection(
+      {required this.width, required this.height, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
     final rimColor = isDark ? AppColors.borderLight : const Color(0xFFA78BFA);
-    final handleColor = isDark ? AppColors.fridgeHandle : const Color(0xFFA78BFA);
+    final handleColor =
+        isDark ? AppColors.fridgeHandle : const Color(0xFFA78BFA);
     final accentColor = isDark ? AppColors.accent : const Color(0xFF7C3AED);
 
     return Container(
-      width: width, height: height,
+      width: width,
+      height: height,
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20),
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
         ),
         gradient: LinearGradient(
-          begin: Alignment.topLeft, end: Alignment.bottomRight,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
           colors: isDark
               ? [const Color(0xFF2A5298), const Color(0xFF1A3A6B)]
               : [const Color(0xFFDDD6FE), const Color(0xFFC4B5FD)],
@@ -569,14 +651,19 @@ class _FreezerDoorSection extends StatelessWidget {
       ),
       child: Stack(children: [
         Positioned(
-          right: 14, top: 0, bottom: 0,
+          right: 14,
+          top: 0,
+          bottom: 0,
           child: Center(
             child: Container(
-              width: 6, height: height * 0.4,
+              width: 6,
+              height: height * 0.4,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(3),
                 color: handleColor,
-                boxShadow: [BoxShadow(color: accentColor.withOpacity(0.4), blurRadius: 4)],
+                boxShadow: [
+                  BoxShadow(color: accentColor.withOpacity(0.4), blurRadius: 4)
+                ],
               ),
             ),
           ),
@@ -586,18 +673,23 @@ class _FreezerDoorSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 32, height: 32,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: accentColor.withOpacity(0.1),
                   border: Border.all(color: accentColor.withOpacity(0.4)),
                 ),
-                child: Icon(Icons.ac_unit_rounded, color: accentColor, size: 16),
+                child:
+                    Icon(Icons.ac_unit_rounded, color: accentColor, size: 16),
               ),
               const SizedBox(height: 4),
-              Text('Морозильник', style: GoogleFonts.exo2(
-                fontSize: 9, color: accentColor.withOpacity(0.8), fontWeight: FontWeight.w600,
-              )),
+              Text('Морозильник',
+                  style: GoogleFonts.exo2(
+                    fontSize: 9,
+                    color: accentColor.withOpacity(0.8),
+                    fontWeight: FontWeight.w600,
+                  )),
             ],
           ),
         ),

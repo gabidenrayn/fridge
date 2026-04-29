@@ -68,6 +68,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   Expanded(
                     child: InventoryPanel(
                       isFreezer: _openSection == StorageSection.freezer,
+                      onClose: () {
+                        setState(() {
+                          _openSection = null;
+                        });
+                      },
                     ),
                   ),
                 if (_openSection == null) _HintText(themeProvider),

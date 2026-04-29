@@ -100,18 +100,26 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   }
 
   Future<void> _pickDate(bool isExpiry) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final picked = await showDatePicker(
       context: context,
       initialDate: isExpiry ? _expiryDate : _purchaseDate,
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
       builder: (ctx, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: AppColors.accent,
-            surface: AppColors.surface,
-          ),
-        ),
+        data: isDark
+            ? ThemeData.dark().copyWith(
+                colorScheme: const ColorScheme.dark(
+                  primary: AppColors.accent,
+                  surface: AppColors.surface,
+                ),
+              )
+            : ThemeData.light().copyWith(
+                colorScheme: const ColorScheme.light(
+                  primary: AppColors.lightAccent,
+                  surface: AppColors.lightSurface,
+                ),
+              ),
         child: child!,
       ),
     );
@@ -136,7 +144,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -277,6 +285,17 @@ class _FormHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark ? AppColors.surface : AppColors.lightSurface;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+    final textSecondaryColor =
+        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+    final textPrimaryColor =
+        isDark ? AppColors.textPrimary : AppColors.lightTextPrimary;
+    final accentColor = isDark ? AppColors.accent : AppColors.lightAccent;
+    final accentDarkColor =
+        isDark ? AppColors.accentDark : AppColors.lightAccentDark;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       child: Row(
@@ -286,12 +305,12 @@ class _FormHeader extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: surfaceColor,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: borderColor),
               ),
-              child: const Icon(Icons.arrow_back_ios_new_rounded,
-                  color: AppColors.textSecondary, size: 16),
+              child: Icon(Icons.arrow_back_ios_new_rounded,
+                  color: textSecondaryColor, size: 16),
             ),
           ),
           const SizedBox(width: 16),
@@ -300,7 +319,7 @@ class _FormHeader extends StatelessWidget {
             style: GoogleFonts.exo2(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: textPrimaryColor,
             ),
           ),
           const Spacer(),
@@ -309,9 +328,9 @@ class _FormHeader extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [
-                  AppColors.accent,
-                  AppColors.accentDark,
+                gradient: LinearGradient(colors: [
+                  accentColor,
+                  accentDarkColor,
                 ]),
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -335,13 +354,16 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textMutedColor =
+        isDark ? AppColors.textMuted : AppColors.lightTextMuted;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(text,
           style: GoogleFonts.exo2(
             fontSize: 10,
             fontWeight: FontWeight.w600,
-            color: AppColors.textMuted,
+            color: textMutedColor,
             letterSpacing: 1,
           )),
     );
@@ -365,30 +387,39 @@ class _StyledTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textPrimaryColor =
+        isDark ? AppColors.textPrimary : AppColors.lightTextPrimary;
+    final textMutedColor =
+        isDark ? AppColors.textMuted : AppColors.lightTextMuted;
+    final surfaceColor = isDark ? AppColors.surface : AppColors.lightSurface;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+    final accentColor = isDark ? AppColors.accent : AppColors.lightAccent;
+
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
       keyboardType: keyboardType,
       validator: validator,
-      style: GoogleFonts.nunito(color: AppColors.textPrimary, fontSize: 14),
+      style: GoogleFonts.nunito(color: textPrimaryColor, fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.nunito(color: AppColors.textMuted, fontSize: 14),
+        hintStyle: GoogleFonts.nunito(color: textMutedColor, fontSize: 14),
         filled: true,
-        fillColor: AppColors.surface,
+        fillColor: surfaceColor,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: borderColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: borderColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.accent),
+          borderSide: BorderSide(color: accentColor),
         ),
       ),
     );
@@ -408,18 +439,24 @@ class _UnitDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark ? AppColors.surface : AppColors.lightSurface;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+    final textPrimaryColor =
+        isDark ? AppColors.textPrimary : AppColors.lightTextPrimary;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: surfaceColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: borderColor),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
-          dropdownColor: AppColors.surface,
-          style: GoogleFonts.exo2(color: AppColors.textPrimary, fontSize: 14),
+          dropdownColor: surfaceColor,
+          style: GoogleFonts.exo2(color: textPrimaryColor, fontSize: 14),
           items: units
               .map((u) => DropdownMenuItem(
                     value: u,
@@ -444,6 +481,13 @@ class _CategorySelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark ? AppColors.surface : AppColors.lightSurface;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+    final accentColor = isDark ? AppColors.accent : AppColors.lightAccent;
+    final textSecondaryColor =
+        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -455,12 +499,10 @@ class _CategorySelector extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.accent.withOpacity(0.2)
-                  : AppColors.surface,
+              color: isSelected ? accentColor.withOpacity(0.2) : surfaceColor,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: isSelected ? AppColors.accent : AppColors.border,
+                color: isSelected ? accentColor : borderColor,
               ),
             ),
             child: Row(
@@ -471,9 +513,7 @@ class _CategorySelector extends StatelessWidget {
                 Text(cat.label,
                     style: GoogleFonts.nunito(
                       fontSize: 12,
-                      color: isSelected
-                          ? AppColors.accent
-                          : AppColors.textSecondary,
+                      color: isSelected ? accentColor : textSecondaryColor,
                       fontWeight:
                           isSelected ? FontWeight.w700 : FontWeight.w400,
                     )),
@@ -501,17 +541,24 @@ class _DateButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark ? AppColors.surface : AppColors.lightSurface;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+    final accentColor = isDark ? AppColors.accent : AppColors.lightAccent;
+    final textMutedColor =
+        isDark ? AppColors.textMuted : AppColors.lightTextMuted;
+    final textPrimaryColor =
+        isDark ? AppColors.textPrimary : AppColors.lightTextPrimary;
     final fmt = DateFormat('dd.MM.yyyy');
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: surfaceColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color:
-                isExpiry ? AppColors.accent.withOpacity(0.4) : AppColors.border,
+            color: isExpiry ? accentColor.withOpacity(0.4) : borderColor,
           ),
         ),
         child: Column(
@@ -520,7 +567,7 @@ class _DateButton extends StatelessWidget {
             Text(label,
                 style: GoogleFonts.exo2(
                   fontSize: 9,
-                  color: AppColors.textMuted,
+                  color: textMutedColor,
                   letterSpacing: 0.8,
                 )),
             const SizedBox(height: 4),
@@ -531,14 +578,14 @@ class _DateButton extends StatelessWidget {
                       ? Icons.event_busy_rounded
                       : Icons.shopping_bag_outlined,
                   size: 14,
-                  color: isExpiry ? AppColors.accent : AppColors.textMuted,
+                  color: isExpiry ? accentColor : textMutedColor,
                 ),
                 const SizedBox(width: 6),
                 Text(fmt.format(date),
                     style: GoogleFonts.exo2(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: textPrimaryColor,
                     )),
               ],
             ),
@@ -561,6 +608,14 @@ class _PhotoPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final surfaceColor = isDark ? AppColors.surface : AppColors.lightSurface;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+    final accentColor = isDark ? AppColors.accent : AppColors.lightAccent;
+    final textMutedColor =
+        isDark ? AppColors.textMuted : AppColors.lightTextMuted;
+    final expiredColor = isDark ? AppColors.expired : AppColors.lightExpired;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -570,10 +625,10 @@ class _PhotoPicker extends StatelessWidget {
           child: Container(
             height: 80,
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: surfaceColor,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AppColors.border,
+                color: borderColor,
                 style: BorderStyle.solid,
               ),
             ),
@@ -583,9 +638,9 @@ class _PhotoPicker extends StatelessWidget {
                     child: Stack(
                       children: [
                         // изображение из файла
-                        const Positioned.fill(
+                        Positioned.fill(
                           child: Icon(Icons.image_rounded,
-                              color: AppColors.accent, size: 32),
+                              color: accentColor, size: 32),
                         ),
                         Positioned(
                           top: 4,
@@ -594,8 +649,8 @@ class _PhotoPicker extends StatelessWidget {
                             onTap: onRemove,
                             child: Container(
                               padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: AppColors.expired,
+                              decoration: BoxDecoration(
+                                color: expiredColor,
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.close,
@@ -610,12 +665,12 @@ class _PhotoPicker extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.add_photo_alternate_outlined,
-                            color: AppColors.textMuted, size: 24),
+                        Icon(Icons.add_photo_alternate_outlined,
+                            color: textMutedColor, size: 24),
                         const SizedBox(height: 4),
                         Text('Добавить фото',
                             style: GoogleFonts.nunito(
-                              color: AppColors.textMuted,
+                              color: textMutedColor,
                               fontSize: 11,
                             )),
                       ],

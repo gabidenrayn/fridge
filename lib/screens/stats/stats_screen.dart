@@ -100,6 +100,13 @@ class _BigCounter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
+    final isDark = themeProvider.isDarkMode;
+    final accentColor = isDark ? AppColors.accent : AppColors.lightAccent;
+    final accentDarkColor =
+        isDark ? AppColors.accentDark : AppColors.lightAccentDark;
+    final textSecondaryColor =
+        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -107,8 +114,8 @@ class _BigCounter extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.accent.withOpacity(0.15),
-            AppColors.accentDark.withOpacity(0.08),
+            accentColor.withOpacity(0.15),
+            accentDarkColor.withOpacity(0.08),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
@@ -122,7 +129,7 @@ class _BigCounter extends StatelessWidget {
             children: [
               Text('Продуктов\nв холодильнике',
                   style: GoogleFonts.nunito(
-                    color: AppColors.textSecondary,
+                    color: textSecondaryColor,
                     fontSize: 13,
                   )),
               Text('$total',
@@ -157,6 +164,15 @@ class _FillIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
+    final isDark = themeProvider.isDarkMode;
+    final surfaceColor = isDark ? AppColors.surface : AppColors.lightSurface;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+    final freshColor = isDark ? AppColors.fresh : AppColors.lightFresh;
+    final warningColor = isDark ? AppColors.warning : AppColors.lightWarning;
+    final expiredColor = isDark ? AppColors.expired : AppColors.lightExpired;
+    final textMutedColor =
+        isDark ? AppColors.textMuted : AppColors.lightTextMuted;
+
     final total = fresh + warning + expired;
     if (total == 0) return const SizedBox.shrink();
 
@@ -167,9 +183,9 @@ class _FillIndicator extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: surfaceColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,7 +193,7 @@ class _FillIndicator extends StatelessWidget {
           Text('ЗАПОЛНЕННОСТЬ',
               style: GoogleFonts.exo2(
                 fontSize: 9,
-                color: AppColors.textMuted,
+                color: textMutedColor,
                 letterSpacing: 1.2,
               )),
           const SizedBox(height: 10),
@@ -189,15 +205,15 @@ class _FillIndicator extends StatelessWidget {
                 children: [
                   Flexible(
                     flex: (fFresh * 100).round(),
-                    child: Container(color: AppColors.fresh),
+                    child: Container(color: freshColor),
                   ),
                   Flexible(
                     flex: (fWarn * 100).round(),
-                    child: Container(color: AppColors.warning),
+                    child: Container(color: warningColor),
                   ),
                   Flexible(
                     flex: (fExp * 100).round(),
-                    child: Container(color: AppColors.expired),
+                    child: Container(color: expiredColor),
                   ),
                 ],
               ),
@@ -208,7 +224,7 @@ class _FillIndicator extends StatelessWidget {
             '${(fFresh * 100).round()}% свежих · '
             '${(fWarn * 100).round()}% скоро · '
             '${(fExp * 100).round()}% просрочено',
-            style: GoogleFonts.nunito(color: AppColors.textMuted, fontSize: 11),
+            style: GoogleFonts.nunito(color: textMutedColor, fontSize: 11),
           ),
         ],
       ),
@@ -231,6 +247,10 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
+    final textMutedColor = themeProvider.isDarkMode
+        ? AppColors.textMuted
+        : AppColors.lightTextMuted;
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -251,7 +271,7 @@ class _StatCard extends StatelessWidget {
           Text(label,
               style: GoogleFonts.nunito(
                 fontSize: 10,
-                color: AppColors.textMuted,
+                color: textMutedColor,
               )),
         ],
       ),
@@ -266,6 +286,15 @@ class _CategoryBreakdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
+    final isDark = themeProvider.isDarkMode;
+    final surfaceColor = isDark ? AppColors.surface : AppColors.lightSurface;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+    final textPrimaryColor =
+        isDark ? AppColors.textPrimary : AppColors.lightTextPrimary;
+    final textSecondaryColor =
+        isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+    final accentColor = isDark ? AppColors.accent : AppColors.lightAccent;
+
     final Map<ProductCategory, int> counts = {};
     for (final p in products) {
       counts[p.category] = (counts[p.category] ?? 0) + 1;
@@ -280,9 +309,9 @@ class _CategoryBreakdown extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: surfaceColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: borderColor),
           ),
           child: Row(
             children: [
@@ -294,7 +323,7 @@ class _CategoryBreakdown extends StatelessWidget {
                   children: [
                     Text(e.key.label,
                         style: GoogleFonts.nunito(
-                          color: AppColors.textPrimary,
+                          color: textPrimaryColor,
                           fontSize: 12,
                         )),
                     const SizedBox(height: 4),
@@ -302,9 +331,8 @@ class _CategoryBreakdown extends StatelessWidget {
                       borderRadius: BorderRadius.circular(3),
                       child: LinearProgressIndicator(
                         value: pct,
-                        backgroundColor: AppColors.border,
-                        valueColor:
-                            const AlwaysStoppedAnimation(AppColors.accent),
+                        backgroundColor: borderColor,
+                        valueColor: AlwaysStoppedAnimation(accentColor),
                         minHeight: 4,
                       ),
                     ),
@@ -314,7 +342,7 @@ class _CategoryBreakdown extends StatelessWidget {
               const SizedBox(width: 10),
               Text('${e.value}',
                   style: GoogleFonts.exo2(
-                    color: AppColors.textSecondary,
+                    color: textSecondaryColor,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   )),

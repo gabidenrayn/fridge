@@ -11,8 +11,9 @@ import '../../product/product_form_screen.dart';
 /// Панель инвентаря — открывается после анимации холодильника или морозильника
 class InventoryPanel extends StatefulWidget {
   final bool isFreezer;
+  final VoidCallback? onClose;
 
-  const InventoryPanel({super.key, required this.isFreezer});
+  const InventoryPanel({super.key, required this.isFreezer, this.onClose});
 
   @override
   State<InventoryPanel> createState() => _InventoryPanelState();
@@ -20,6 +21,7 @@ class InventoryPanel extends StatefulWidget {
 
 class _InventoryPanelState extends State<InventoryPanel> {
   ProductCategory? _selectedCategory;
+  double _dragOffset = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -27,60 +29,90 @@ class _InventoryPanelState extends State<InventoryPanel> {
     final products =
         widget.isFreezer ? provider.freezerProducts : provider.fridgeProducts;
     final sectionTitle = widget.isFreezer ? 'Морозильник' : 'Холодильник';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.panelBg,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.all(color: AppColors.borderLight.withOpacity(0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.accent.withOpacity(0.1),
-            blurRadius: 30,
-            offset: const Offset(0, -5),
+    return GestureDetector(
+      onVerticalDragUpdate: (details) {
+        setState(() {
+          _dragOffset += details.delta.dy;
+        });
+      },
+      onVerticalDragEnd: (details) {
+        // Если свайпили вниз более чем на 100 пиксельей или скорость > 200 пикселей в сек
+        if (_dragOffset > 100 || details.velocity.pixelsPerSecond.dy > 200) {
+          widget.onClose?.call();
+        } else {
+          // Вернуть в исходное положение
+          setState(() {
+            _dragOffset = 0;
+          });
+        }
+      },
+      child: Transform.translate(
+        offset: Offset(0, _dragOffset),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.panelBg : AppColors.lightPanelBg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(
+              color: isDark
+                  ? AppColors.borderLight.withOpacity(0.5)
+                  : AppColors.lightBorder.withOpacity(0.3),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: (isDark ? AppColors.accent : AppColors.lightAccent)
+                    .withOpacity(0.1),
+                blurRadius: 30,
+                offset: const Offset(0, -5),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // ─── Заголовок ───
-          _PanelHeader(total: products.length, sectionTitle: sectionTitle),
+          child: Column(
+            children: [
+              // ─── Заголовок ───
+              _PanelHeader(
+                total: products.length,
+                sectionTitle: sectionTitle,
+              ),
 
-          // ─── Категории (горизонтальный скролл) ───
-          _CategoryFilter(
-            selected: _selectedCategory,
-            onSelect: (cat) {
-              setState(() => _selectedCategory = cat);
-              provider.setFilter(cat);
-            },
-          ),
+              // ─── Категории (горизонтальный скролл) ───
+              _CategoryFilter(
+                selected: _selectedCategory,
+                onSelect: (cat) {
+                  setState(() => _selectedCategory = cat);
+                  provider.setFilter(cat);
+                },
+              ),
 
-          // ─── Статистика-строка ───
-          _StatsRow(products: products),
+              // ─── Статистика-строка ───
+              _StatsRow(products: products),
 
-          // ─── Список продуктов ───
-          Expanded(
-            child: products.isEmpty
-                ? _EmptyInventory(isFreezer: widget.isFreezer)
-                : ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                    itemCount: products.length,
-                    itemBuilder: (ctx, i) => ProductCard(
-                      product: products[i],
-                      index: i,
-                      onTap: () => Navigator.push(
-                        ctx,
-                        MaterialPageRoute(
-                          builder: (_) => ProductFormScreen(
-                            product: products[i],
-                          ),
+              // ─── Список продуктов ───
+              Expanded(
+                child: products.isEmpty
+                    ? _EmptyInventory(isFreezer: widget.isFreezer)
+                    : ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                        itemCount: products.length,
+                        itemBuilder: (ctx, i) => ProductCard(
+                          product: products[i],
+                          index: i,
+                          onTap: () => Navigator.push(
+                            ctx,
+                            MaterialPageRoute(
+                              builder: (_) => ProductFormScreen(
+                                product: products[i],
+                              ),
+                            ),
+                          ).then((_) => provider.loadProducts()),
+                          onDelete: () => _confirmDelete(ctx, products[i]),
                         ),
-                      ).then((_) => provider.loadProducts()),
-                      onDelete: () => _confirmDelete(ctx, products[i]),
-                    ),
-                  ),
+                      ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     )
         .animate()
@@ -89,28 +121,41 @@ class _InventoryPanelState extends State<InventoryPanel> {
   }
 
   void _confirmDelete(BuildContext context, ProductModel product) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: isDark ? AppColors.surface : AppColors.lightSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('Удалить?',
-            style: GoogleFonts.exo2(color: AppColors.textPrimary)),
+            style: GoogleFonts.exo2(
+              color:
+                  isDark ? AppColors.textPrimary : AppColors.lightTextPrimary,
+            )),
         content: Text('«${product.name}» будет удалён.',
-            style: GoogleFonts.nunito(color: AppColors.textSecondary)),
+            style: GoogleFonts.nunito(
+              color: isDark
+                  ? AppColors.textSecondary
+                  : AppColors.lightTextSecondary,
+            )),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Отмена',
-                style: TextStyle(color: AppColors.textMuted)),
+            child: Text('Отмена',
+                style: TextStyle(
+                  color:
+                      isDark ? AppColors.textMuted : AppColors.lightTextMuted,
+                )),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               context.read<ProductProvider>().deleteProduct(product);
             },
-            child: const Text('Удалить',
-                style: TextStyle(color: AppColors.expired)),
+            child: Text('Удалить',
+                style: TextStyle(
+                  color: isDark ? AppColors.expired : AppColors.lightExpired,
+                )),
           ),
         ],
       ),
@@ -125,6 +170,7 @@ class _PanelHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Row(
@@ -140,7 +186,9 @@ class _PanelHeader extends StatelessWidget {
                     height: 4,
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
-                      color: AppColors.borderLight,
+                      color: isDark
+                          ? AppColors.borderLight
+                          : AppColors.lightBorder,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -150,7 +198,7 @@ class _PanelHeader extends StatelessWidget {
                   style: GoogleFonts.exo2(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.accent,
+                    color: isDark ? AppColors.accent : AppColors.lightAccent,
                     letterSpacing: 2,
                   ),
                 ),
@@ -158,7 +206,8 @@ class _PanelHeader extends StatelessWidget {
                   '$total предметов',
                   style: GoogleFonts.nunito(
                     fontSize: 12,
-                    color: AppColors.textMuted,
+                    color:
+                        isDark ? AppColors.textMuted : AppColors.lightTextMuted,
                   ),
                 ),
               ],
@@ -173,12 +222,17 @@ class _PanelHeader extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.accent.withOpacity(0.15),
+                color: (isDark ? AppColors.accent : AppColors.lightAccent)
+                    .withOpacity(0.15),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.accent.withOpacity(0.4)),
+                border: Border.all(
+                  color: (isDark ? AppColors.accent : AppColors.lightAccent)
+                      .withOpacity(0.4),
+                ),
               ),
-              child: const Icon(Icons.add_rounded,
-                  color: AppColors.accent, size: 20),
+              child: Icon(Icons.add_rounded,
+                  color: isDark ? AppColors.accent : AppColors.lightAccent,
+                  size: 20),
             ),
           ),
         ],
@@ -234,6 +288,7 @@ class _CatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -241,11 +296,21 @@ class _CatChip extends StatelessWidget {
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color:
-              isSelected ? AppColors.accent.withOpacity(0.2) : AppColors.cardBg,
+          color: isSelected
+              ? (isDark ? AppColors.accent : AppColors.lightAccent)
+                  .withOpacity(0.2)
+              : isDark
+                  ? AppColors.cardBg
+                  : AppColors.lightCardBg,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.accent : AppColors.border,
+            color: isSelected
+                ? isDark
+                    ? AppColors.accent
+                    : AppColors.lightAccent
+                : isDark
+                    ? AppColors.border
+                    : AppColors.lightBorder,
           ),
         ),
         child: Row(
@@ -255,8 +320,13 @@ class _CatChip extends StatelessWidget {
             Text(label,
                 style: GoogleFonts.nunito(
                   fontSize: 12,
-                  color:
-                      isSelected ? AppColors.accent : AppColors.textSecondary,
+                  color: isSelected
+                      ? isDark
+                          ? AppColors.accent
+                          : AppColors.lightAccent
+                      : isDark
+                          ? AppColors.textSecondary
+                          : AppColors.lightTextSecondary,
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                 )),
           ],
@@ -351,6 +421,7 @@ class _EmptyInventory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -364,13 +435,19 @@ class _EmptyInventory extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             isFreezer ? 'Морозильник пуст' : 'Холодильник пуст',
-            style: GoogleFonts.exo2(color: AppColors.textMuted, fontSize: 16),
+            style: GoogleFonts.exo2(
+              color: isDark ? AppColors.textMuted : AppColors.lightTextMuted,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             'Добавьте продукты через сканер\nили кнопку «+»',
             textAlign: TextAlign.center,
-            style: GoogleFonts.nunito(color: AppColors.textMuted, fontSize: 13),
+            style: GoogleFonts.nunito(
+              color: isDark ? AppColors.textMuted : AppColors.lightTextMuted,
+              fontSize: 13,
+            ),
           ),
         ],
       ),
