@@ -19,6 +19,7 @@ class ProductProvider extends ChangeNotifier {
   ProductCategory? _filterCategory;
   StreamSubscription<QuerySnapshot>? _productsSubscription;
   final Map<String, int> _cloudIdToLocalId = {};
+  String? _deviceId; // Уникальный ID устройства для определения локальных изменений
 
   List<ProductModel> get products => _filtered;
   bool get isLoading => _isLoading;
@@ -69,13 +70,39 @@ class ProductProvider extends ChangeNotifier {
     _cloudIdToLocalId.clear();
 
     if (_authProvider?.accountModel != null) {
+      _generateDeviceId();
       _loadMapping();
-      loadProducts(); // Одноразовая загрузка и синхронизация
+      _startRealtimeSync();
+      loadProducts(); // Загрузка из локальной БД
     } else {
       _products.clear();
       _saveMapping();
       notifyListeners();
     }
+  }
+
+  /// Генерация уникального ID устройства
+  void _generateDeviceId() {
+    _deviceId = DateTime.now().millisecondsSinceEpoch.toString();
+    debugPrint('Generated device ID: $_deviceId');
+  }
+
+  /// Запуск real-time синхронизации с Firestore
+  void _startRealtimeSync() {
+    final accountId = _authProvider!.accountModel!.id;
+    debugPrint('Starting realtime sync for account: $accountId');
+
+    _productsSubscription = _firestore
+        .collection('accounts')
+        .doc(accountId)
+        .collection('products')
+        .snapshots()
+        .listen((snapshot) async {
+      debugPrint('Cloud snapshot received: ${snapshot.docs.length} products');
+      _handleCloudChanges(snapshot);
+    }, onError: (error) {
+      debugPrint('Realtime sync error: $error');
+    });
   }
 
   /// Сохранить маппинг в SharedPreferences
@@ -122,6 +149,115 @@ class ProductProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Обработка изменений из облака
+  Future<void> _handleCloudChanges(QuerySnapshot snapshot) async {
+    debugPrint('Handling cloud changes...');
+    final cloudProducts =
+        snapshot.docs.map((doc) => ProductModel.fromFirestore(doc)).toList();
+
+    // Получить текущие локальные продукты
+    final localProducts = await _repo.getAll();
+    final cloudDocIds = snapshot.docs.map((doc) => doc.id).toSet();
+
+    debugPrint('Cloud products: ${cloudProducts.length}, Local products: ${localProducts.length}');
+
+    // Синхронизировать: облако -> локальная БД
+    for (int i = 0; i < cloudProducts.length; i++) {
+      final product = cloudProducts[i];
+      final cloudDocId = snapshot.docs[i].id;
+      final data = snapshot.docs[i].data() as Map<String, dynamic>;
+
+      // Пропускаем изменения с текущего deviceId (локальные изменения)
+      if (data['deviceId'] == _deviceId) {
+        debugPrint('Skipping local change for product: ${product.name}');
+        continue;
+      }
+
+      if (!_cloudIdToLocalId.containsKey(cloudDocId)) {
+        // Проверить, нет ли уже продукта с такими же данными (для предотвращения дублирования)
+        final isDuplicate = _products.any((p) =>
+            p.name == product.name &&
+            p.expiryDate.isAtSameMomentAs(product.expiryDate) &&
+            p.purchaseDate.isAtSameMomentAs(product.purchaseDate));
+
+        if (isDuplicate) {
+          // Найти дубликат и привязать к cloud ID
+          final duplicate = _products.firstWhere((p) =>
+              p.name == product.name &&
+              p.expiryDate.isAtSameMomentAs(product.expiryDate) &&
+              p.purchaseDate.isAtSameMomentAs(product.purchaseDate));
+          if (duplicate.id != null) {
+            _cloudIdToLocalId[cloudDocId] = duplicate.id!;
+            await _saveMapping();
+          }
+          continue;
+        }
+
+        // Создать локальный ID для продукта из облака
+        final localId = _generateLocalId();
+        _cloudIdToLocalId[cloudDocId] = localId;
+        final localProduct = product.copyWith(id: localId);
+        await _repo.add(localProduct);
+        _products.add(localProduct);
+        debugPrint('Added new product from cloud: ${product.name}');
+      } else {
+        // Обновить существующий продукт
+        final localId = _cloudIdToLocalId[cloudDocId]!;
+        final localProduct = localProducts.firstWhere(
+          (p) => p.id == localId,
+          orElse: () => product.copyWith(id: localId),
+        );
+        final updatedProduct = localProduct.copyWith(
+          name: product.name,
+          barcode: product.barcode,
+          expiryDate: product.expiryDate,
+          purchaseDate: product.purchaseDate,
+          quantity: product.quantity,
+          unit: product.unit,
+          category: product.category,
+          note: product.note,
+          imagePath: product.imagePath,
+          isFavorite: product.isFavorite,
+          brand: product.brand,
+        );
+        await _repo.update(updatedProduct);
+        final idx = _products.indexWhere((p) => p.id == localId);
+        if (idx != -1) {
+          _products[idx] = updatedProduct;
+        }
+        debugPrint('Updated product from cloud: ${product.name}');
+      }
+    }
+
+    // Удалить продукты, которых нет в облаке (удалены с других устройств)
+    for (final entry in _cloudIdToLocalId.entries) {
+      if (!cloudDocIds.contains(entry.key)) {
+        final localId = entry.value;
+        final localProduct = localProducts.firstWhere(
+          (p) => p.id == localId,
+          orElse: () => _products.firstWhere(
+            (p) => p.id == localId,
+            orElse: () => _products.first,
+          ),
+        );
+        await _repo.delete(localProduct);
+        _products.removeWhere((p) => p.id == localId);
+        _cloudIdToLocalId.remove(entry.key);
+        debugPrint('Deleted product from local (removed from cloud): localId $localId');
+      }
+    }
+
+    await _saveMapping();
+    notifyListeners();
+    debugPrint('Cloud changes handled, total products: ${_products.length}');
+  }
+
+  /// Генерация локального ID для продукта из облака
+  int _generateLocalId() {
+    if (_products.isEmpty) return 1;
+    return _products.map((p) => p.id ?? 0).reduce((a, b) => a > b ? a : b) + 1;
+  }
+
   Future<void> addProduct(ProductModel product) async {
     // Сначала добавляем в локальную БД
     final saved = await _repo.add(product);
@@ -131,17 +267,20 @@ class ProductProvider extends ChangeNotifier {
     // Синхронизировать в облако
     if (_authProvider?.accountModel != null) {
       try {
+        final productData = product.toFirestore();
+        productData['deviceId'] = _deviceId; // Добавляем deviceId
+
         final docRef = await _firestore
             .collection('accounts')
             .doc(_authProvider!.accountModel!.id)
             .collection('products')
-            .add(product.toFirestore());
+            .add(productData);
 
         if (saved.id != null) {
           _cloudIdToLocalId[docRef.id] = saved.id!;
           await _saveMapping();
         }
-        debugPrint('Added product to cloud: ${saved.name}');
+        debugPrint('Added product to cloud: ${saved.name} (deviceId: $_deviceId)');
       } catch (e) {
         debugPrint('Error adding product to cloud: $e');
       }
@@ -164,13 +303,16 @@ class ProductProvider extends ChangeNotifier {
             .cast<MapEntry<String, int>?>()
             .firstWhere((entry) => entry?.value == product.id, orElse: () => null);
         if (entry != null) {
+          final productData = product.toFirestore();
+          productData['deviceId'] = _deviceId; // Добавляем deviceId
+
           await _firestore
               .collection('accounts')
               .doc(_authProvider!.accountModel!.id)
               .collection('products')
               .doc(entry.key)
-              .set(product.toFirestore());
-          debugPrint('Updated product in cloud: ${product.name}');
+              .set(productData);
+          debugPrint('Updated product in cloud: ${product.name} (deviceId: $_deviceId)');
         }
       } catch (e) {
         debugPrint('Error updating product in cloud: $e');
@@ -199,7 +341,7 @@ class ProductProvider extends ChangeNotifier {
               .delete();
           _cloudIdToLocalId.remove(entry.key);
           await _saveMapping();
-          debugPrint('Deleted product from cloud: ${product.name}');
+          debugPrint('Deleted product from cloud: ${product.name} (deviceId: $_deviceId)');
         }
       } catch (e) {
         debugPrint('Error deleting product from cloud: $e');
