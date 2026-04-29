@@ -63,14 +63,14 @@ class ProductProvider extends ChangeNotifier {
     _onAuthChanged();
   }
 
-  void _onAuthChanged() {
+  void _onAuthChanged() async {
     // Отписаться от предыдущего слушателя
     _productsSubscription?.cancel();
     _productsSubscription = null;
     _cloudIdToLocalId.clear();
 
     if (_authProvider?.accountModel != null) {
-      _generateDeviceId();
+      await _generateDeviceId();
       _loadMapping();
       _startRealtimeSync();
       loadProducts(); // Загрузка из локальной БД
@@ -82,15 +82,21 @@ class ProductProvider extends ChangeNotifier {
   }
 
   /// Генерация уникального ID устройства
-  void _generateDeviceId() {
-    _deviceId = DateTime.now().millisecondsSinceEpoch.toString();
-    debugPrint('Generated device ID: $_deviceId');
+  Future<void> _generateDeviceId() async {
+    final prefs = await SharedPreferences.getInstance();
+    _deviceId = prefs.getString('device_id');
+    if (_deviceId == null) {
+      _deviceId = DateTime.now().millisecondsSinceEpoch.toString();
+      await prefs.setString('device_id', _deviceId!);
+    }
+    debugPrint('Device ID: $_deviceId');
   }
 
   /// Запуск real-time синхронизации с Firestore
   void _startRealtimeSync() {
     final accountId = _authProvider!.accountModel!.id;
     debugPrint('Starting realtime sync for account: $accountId');
+    debugPrint('Firestore path: accounts/$accountId/products');
 
     _productsSubscription = _firestore
         .collection('accounts')
@@ -99,6 +105,13 @@ class ProductProvider extends ChangeNotifier {
         .snapshots()
         .listen((snapshot) async {
       debugPrint('Cloud snapshot received: ${snapshot.docs.length} products');
+      debugPrint('Snapshot metadata: hasPendingWrites=${snapshot.metadata.hasPendingWrites}, isFromCache=${snapshot.metadata.isFromCache}');
+      if (snapshot.docs.isEmpty) {
+        debugPrint('Cloud collection is empty');
+      }
+      for (var doc in snapshot.docs) {
+        debugPrint('Product doc: ${doc.id}, data: ${doc.data()}');
+      }
       _handleCloudChanges(snapshot);
     }, onError: (error) {
       debugPrint('Realtime sync error: $error');
