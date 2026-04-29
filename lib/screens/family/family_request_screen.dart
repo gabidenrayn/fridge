@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../models/account_model.dart';
@@ -39,7 +38,8 @@ class _FamilyRequestScreenState extends State<FamilyRequestScreen> {
     final authProvider = context.read<AuthProvider>();
     if (authProvider.userModel != null) {
       try {
-        final requests = await context.read<AuthService>()
+        final requests = await context
+            .read<AuthService>()
             .getUserRequests(authProvider.userModel!.id);
         setState(() {
           _myRequests = requests;
@@ -63,8 +63,8 @@ class _FamilyRequestScreenState extends State<FamilyRequestScreen> {
     });
 
     try {
-      final results = await context.read<AuthService>()
-          .searchFamilyAccounts(query);
+      final results =
+          await context.read<AuthService>().searchFamilyAccounts(query);
       setState(() {
         _searchResults = results;
         _isLoading = false;
@@ -96,8 +96,8 @@ class _FamilyRequestScreenState extends State<FamilyRequestScreen> {
             user.id,
             user.name,
             user.email,
-            message: _messageController.text.trim().isEmpty 
-                ? null 
+            message: _messageController.text.trim().isEmpty
+                ? null
                 : _messageController.text.trim(),
           );
 
@@ -161,7 +161,7 @@ class _FamilyRequestScreenState extends State<FamilyRequestScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: _showSearch 
+                        color: _showSearch
                             ? Theme.of(context).colorScheme.primary
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
@@ -170,8 +170,8 @@ class _FamilyRequestScreenState extends State<FamilyRequestScreen> {
                         'Search',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.exo2(
-                          color: _showSearch 
-                              ? Colors.white 
+                          color: _showSearch
+                              ? Colors.white
                               : Theme.of(context).textTheme.bodyMedium?.color,
                           fontWeight: FontWeight.w600,
                         ),
@@ -185,7 +185,7 @@ class _FamilyRequestScreenState extends State<FamilyRequestScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
-                        color: !_showSearch 
+                        color: !_showSearch
                             ? Theme.of(context).colorScheme.primary
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
@@ -194,8 +194,8 @@ class _FamilyRequestScreenState extends State<FamilyRequestScreen> {
                         'My Requests',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.exo2(
-                          color: !_showSearch 
-                              ? Colors.white 
+                          color: !_showSearch
+                              ? Colors.white
                               : Theme.of(context).textTheme.bodyMedium?.color,
                           fontWeight: FontWeight.w600,
                         ),
@@ -308,7 +308,11 @@ class _FamilyRequestScreenState extends State<FamilyRequestScreen> {
           Text(
             'Enter a family name in the search field above',
             style: GoogleFonts.nunito(
-              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+              color: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.color
+                  ?.withOpacity(0.7),
             ),
             textAlign: TextAlign.center,
           ),
@@ -340,7 +344,11 @@ class _FamilyRequestScreenState extends State<FamilyRequestScreen> {
           Text(
             'Search for families and send join requests',
             style: GoogleFonts.nunito(
-              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+              color: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.color
+                  ?.withOpacity(0.7),
             ),
             textAlign: TextAlign.center,
           ),
@@ -373,7 +381,8 @@ class _FamilyCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -398,7 +407,11 @@ class _FamilyCard extends StatelessWidget {
                       Text(
                         'Family Account',
                         style: GoogleFonts.nunito(
-                          color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                          color: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.color
+                              ?.withOpacity(0.7),
                         ),
                       ),
                     ],
@@ -500,14 +513,19 @@ class _RequestCard extends StatelessWidget {
                         'Sent: ${request.createdAt.day}/${request.createdAt.month}/${request.createdAt.year}',
                         style: GoogleFonts.nunito(
                           fontSize: 12,
-                          color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                          color: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.color
+                              ?.withOpacity(0.7),
                         ),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -529,7 +547,11 @@ class _RequestCard extends StatelessWidget {
                 'Message: ${request.message}',
                 style: GoogleFonts.nunito(
                   fontSize: 13,
-                  color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.8),
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.color
+                      ?.withOpacity(0.8),
                 ),
               ),
             ],

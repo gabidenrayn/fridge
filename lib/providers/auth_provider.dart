@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -14,6 +15,8 @@ class AuthProvider with ChangeNotifier {
   AccountModel? _accountModel;
   bool _isLoading = false;
   bool _isReady = false;
+  StreamSubscription<DocumentSnapshot>? _userSubscription;
+  StreamSubscription<DocumentSnapshot>? _accountSubscription;
 
   User? get firebaseUser => _firebaseUser;
   UserModel? get userModel => _userModel;
@@ -31,29 +34,71 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> _onAuthStateChanged(User? user) async {
+    // Отписаться от предыдущих слушателей
+    _userSubscription?.cancel();
+    _accountSubscription?.cancel();
+    _userSubscription = null;
+    _accountSubscription = null;
+
     _firebaseUser = user;
     _isReady = false;
     notifyListeners();
 
     if (user != null) {
       try {
-        _userModel = await _authService.getUserData(user.uid);
-        if (_userModel != null) {
-          _accountModel = await _authService.getAccount(_userModel!.accountId);
-        } else {
-          _accountModel = null;
-        }
+        // Real-time слушатель для пользователя
+        _userSubscription = FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .snapshots()
+            .listen((doc) {
+          if (doc.exists) {
+            _userModel = UserModel.fromFirestore(doc);
+            _startAccountListener();
+          } else {
+            _userModel = null;
+            _accountModel = null;
+          }
+          _isReady = true;
+          notifyListeners();
+        }, onError: (error) {
+          debugPrint('User snapshot error: $error');
+        });
       } catch (_) {
         _userModel = null;
         _accountModel = null;
+        _isReady = true;
+        notifyListeners();
       }
     } else {
       _userModel = null;
       _accountModel = null;
+      _isReady = true;
+      notifyListeners();
     }
+  }
 
-    _isReady = true;
-    notifyListeners();
+  void _startAccountListener() {
+    if (_userModel == null) return;
+
+    _accountSubscription?.cancel();
+    _accountSubscription = null;
+
+    // Real-time слушатель для аккаунта
+    _accountSubscription = FirebaseFirestore.instance
+        .collection('accounts')
+        .doc(_userModel!.accountId)
+        .snapshots()
+        .listen((doc) {
+      if (doc.exists) {
+        _accountModel = AccountModel.fromFirestore(doc);
+      } else {
+        _accountModel = null;
+      }
+      notifyListeners();
+    }, onError: (error) {
+      debugPrint('Account snapshot error: $error');
+    });
   }
 
   /// Регистрация
