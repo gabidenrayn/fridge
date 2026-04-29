@@ -169,11 +169,17 @@ class AuthProvider with ChangeNotifier {
         name,
         _firebaseUser!.uid,
       );
-      // Обновить текущий аккаунт
-      _accountModel = await _authService.getAccount(accountId);
-      notifyListeners();
+
+      // Обновить accountId пользователя в Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_firebaseUser!.uid)
+          .update({'accountId': accountId});
+
+      debugPrint('Created family account: $accountId, updated user accountId');
       return null;
     } catch (e) {
+      debugPrint('Error creating family account: $e');
       return 'Ошибка создания семейного аккаунта';
     }
   }
