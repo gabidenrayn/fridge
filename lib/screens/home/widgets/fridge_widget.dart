@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/constants/app_colors.dart';
@@ -85,95 +87,147 @@ class _FridgeWidgetState extends State<FridgeWidget>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final fridgeH = widget.height * 0.68;
-    final freezerH = widget.height * 0.32;
+    final isOpen = widget.openSection != null;
 
-    return SizedBox(
-      width: widget.width,
-      height: widget.height,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // Тело
-          _FridgeBody(
-            width: widget.width,
-            fridgeH: fridgeH,
-            freezerH: freezerH,
-            openSection: widget.openSection,
-            fridgeItems: widget.fridgeItems,
-            freezerItems: widget.freezerItems,
-            onFridgeTap: () => widget.onSectionTap(
-              widget.openSection == StorageSection.fridge
-                  ? null
-                  : StorageSection.fridge,
-            ),
-            onFreezerTap: () => widget.onSectionTap(
-              widget.openSection == StorageSection.freezer
-                  ? null
-                  : StorageSection.freezer,
-            ),
-            isDark: isDark,
-          ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth =
+            constraints.maxWidth.isFinite ? constraints.maxWidth : widget.width;
+        final sectionWidth = math.min((maxWidth - 16) / 2, 220.0);
+        final fridgeH = widget.height * 0.68;
+        final freezerH = widget.height * 0.32;
 
-          // Дверца холодильника
-          Positioned(
-            top: 0,
-            left: 0,
-            child: IgnorePointer(
-              child: AnimatedBuilder(
-                animation: _fridgeDoorAngle,
-                builder: (context, _) => Transform(
-                  alignment: Alignment.centerLeft,
-                  transform: Matrix4.identity()
-                    ..setEntry(3, 2, 0.001)
-                    ..rotateY(_fridgeDoorAngle.value),
-                  child: _FridgeDoorSection(
-                    width: widget.width,
-                    height: fridgeH,
-                    isDark: isDark,
+        return SizedBox(
+          width: isOpen ? sectionWidth * 2 + 12 : widget.width,
+          height: isOpen ? sectionWidth : widget.height,
+          child: isOpen
+              ? Row(
+                  key: const ValueKey('openSections'),
+                  children: [
+                    SizedBox(
+                      width: sectionWidth,
+                      height: sectionWidth,
+                      child: _SectionCard(
+                        label: 'Холодильник',
+                        icon: Icons.kitchen_rounded,
+                        count: widget.fridgeItems,
+                        isActive: widget.openSection == StorageSection.fridge,
+                        color: Theme.of(context).colorScheme.primary,
+                        onTap: () => widget.onSectionTap(
+                          widget.openSection == StorageSection.fridge
+                              ? null
+                              : StorageSection.fridge,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: sectionWidth,
+                      height: sectionWidth,
+                      child: _SectionCard(
+                        label: 'Морозильник',
+                        icon: Icons.ac_unit_rounded,
+                        count: widget.freezerItems,
+                        isActive: widget.openSection == StorageSection.freezer,
+                        color: const Color(0xFF7C3AED),
+                        onTap: () => widget.onSectionTap(
+                          widget.openSection == StorageSection.freezer
+                              ? null
+                              : StorageSection.freezer,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  clipBehavior: Clip.hardEdge,
+                  child: Stack(
+                    clipBehavior: Clip.hardEdge,
+                    children: [
+                      // Тело
+                      _FridgeBody(
+                        width: widget.width,
+                        fridgeH: fridgeH,
+                        freezerH: freezerH,
+                        openSection: widget.openSection,
+                        fridgeItems: widget.fridgeItems,
+                        freezerItems: widget.freezerItems,
+                        onFridgeTap: () => widget.onSectionTap(
+                          widget.openSection == StorageSection.fridge
+                              ? null
+                              : StorageSection.fridge,
+                        ),
+                        onFreezerTap: () => widget.onSectionTap(
+                          widget.openSection == StorageSection.freezer
+                              ? null
+                              : StorageSection.freezer,
+                        ),
+                        isDark: isDark,
+                      ),
+
+                      // Дверца холодильника
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        child: IgnorePointer(
+                          child: AnimatedBuilder(
+                            animation: _fridgeDoorAngle,
+                            builder: (context, _) => Transform(
+                              alignment: Alignment.centerLeft,
+                              transform: Matrix4.identity()
+                                ..setEntry(3, 2, 0.001)
+                                ..rotateY(_fridgeDoorAngle.value),
+                              child: _FridgeDoorSection(
+                                width: widget.width,
+                                height: fridgeH,
+                                isDark: isDark,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Дверца морозильника
+                      Positioned(
+                        top: fridgeH,
+                        left: 0,
+                        child: IgnorePointer(
+                          child: AnimatedBuilder(
+                            animation: _freezerDoorAngle,
+                            builder: (context, _) => Transform(
+                              alignment: Alignment.centerLeft,
+                              transform: Matrix4.identity()
+                                ..setEntry(3, 2, 0.001)
+                                ..rotateY(_freezerDoorAngle.value),
+                              child: _FreezerDoorSection(
+                                width: widget.width,
+                                height: freezerH,
+                                isDark: isDark,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      if (widget.fridgeExpiring > 0)
+                        Positioned(
+                          top: -8,
+                          right: -8,
+                          child: _ExpiryBadge(count: widget.fridgeExpiring),
+                        ),
+
+                      if (widget.freezerExpiring > 0)
+                        Positioned(
+                          bottom: -8,
+                          right: -8,
+                          child: _ExpiryBadge(count: widget.freezerExpiring),
+                        ),
+                    ],
                   ),
                 ),
-              ),
-            ),
-          ),
-
-          // Дверца морозильника
-          Positioned(
-            top: fridgeH,
-            left: 0,
-            child: IgnorePointer(
-              child: AnimatedBuilder(
-                animation: _freezerDoorAngle,
-                builder: (context, _) => Transform(
-                  alignment: Alignment.centerLeft,
-                  transform: Matrix4.identity()
-                    ..setEntry(3, 2, 0.001)
-                    ..rotateY(_freezerDoorAngle.value),
-                  child: _FreezerDoorSection(
-                    width: widget.width,
-                    height: freezerH,
-                    isDark: isDark,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          if (widget.fridgeExpiring > 0)
-            Positioned(
-              top: -8,
-              right: -8,
-              child: _ExpiryBadge(count: widget.fridgeExpiring),
-            ),
-
-          if (widget.freezerExpiring > 0)
-            Positioned(
-              bottom: -8,
-              right: -8,
-              child: _ExpiryBadge(count: widget.freezerExpiring),
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -207,6 +261,82 @@ class _ExpiryBadge extends StatelessWidget {
         begin: const Offset(1, 1),
         end: const Offset(1.1, 1.1),
         duration: 800.ms);
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final int count;
+  final bool isActive;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _SectionCard({
+    required this.label,
+    required this.icon,
+    required this.count,
+    required this.isActive,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          color: isActive ? color.withOpacity(0.16) : theme.cardColor,
+          border: Border.all(
+            color: isActive ? color : theme.dividerColor.withOpacity(0.2),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 14,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.14),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '$count товаров',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.75),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

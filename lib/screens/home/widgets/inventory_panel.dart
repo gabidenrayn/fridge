@@ -74,6 +74,7 @@ class _InventoryPanelState extends State<InventoryPanel> {
               _PanelHeader(
                 total: products.length,
                 sectionTitle: sectionTitle,
+                isFreezer: widget.isFreezer,
               ),
 
               // ─── Категории (горизонтальный скролл) ───
@@ -166,7 +167,13 @@ class _InventoryPanelState extends State<InventoryPanel> {
 class _PanelHeader extends StatelessWidget {
   final int total;
   final String sectionTitle;
-  const _PanelHeader({required this.total, required this.sectionTitle});
+  final bool isFreezer;
+
+  const _PanelHeader({
+    required this.total,
+    required this.sectionTitle,
+    required this.isFreezer,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -217,7 +224,11 @@ class _PanelHeader extends StatelessWidget {
           GestureDetector(
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ProductFormScreen()),
+              MaterialPageRoute(
+                builder: (_) => ProductFormScreen(
+                  initialCategory: isFreezer ? ProductCategory.frozen : null,
+                ),
+              ),
             ).then((_) => context.read<ProductProvider>().loadProducts()),
             child: Container(
               padding: const EdgeInsets.all(10),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
 import '../../models/product_model.dart';
@@ -13,6 +12,7 @@ class ProductFormScreen extends StatefulWidget {
   final String? initialName;
   final String? initialBrand;
   final String? barcode;
+  final ProductCategory? initialCategory;
 
   const ProductFormScreen({
     super.key,
@@ -20,6 +20,7 @@ class ProductFormScreen extends StatefulWidget {
     this.initialName,
     this.initialBrand,
     this.barcode,
+    this.initialCategory,
   });
 
   @override
@@ -58,7 +59,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
       _purchaseDate = p.purchaseDate;
       _unit = p.unit;
       _category = p.category;
-      _imagePath = p.imagePath;
+    } else if (widget.initialCategory != null) {
+      _category = widget.initialCategory!;
     }
   }
 
@@ -132,13 +134,6 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
         }
       });
     }
-  }
-
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final file =
-        await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
-    if (file != null) setState(() => _imagePath = file.path);
   }
 
   @override
@@ -249,14 +244,6 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         controller: _noteCtrl,
                         hint: 'Любая дополнительная информация...',
                         maxLines: 3,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Фото
-                      _PhotoPicker(
-                        imagePath: _imagePath,
-                        onPick: _pickImage,
-                        onRemove: () => setState(() => _imagePath = null),
                       ),
                       const SizedBox(height: 30),
                     ],
@@ -592,93 +579,6 @@ class _DateButton extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _PhotoPicker extends StatelessWidget {
-  final String? imagePath;
-  final VoidCallback onPick, onRemove;
-
-  const _PhotoPicker({
-    required this.imagePath,
-    required this.onPick,
-    required this.onRemove,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final surfaceColor = isDark ? AppColors.surface : AppColors.lightSurface;
-    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
-    final accentColor = isDark ? AppColors.accent : AppColors.lightAccent;
-    final textMutedColor =
-        isDark ? AppColors.textMuted : AppColors.lightTextMuted;
-    final expiredColor = isDark ? AppColors.expired : AppColors.lightExpired;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _FieldLabel('Фото (необязательно)'),
-        GestureDetector(
-          onTap: onPick,
-          child: Container(
-            height: 80,
-            decoration: BoxDecoration(
-              color: surfaceColor,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: borderColor,
-                style: BorderStyle.solid,
-              ),
-            ),
-            child: imagePath != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(11),
-                    child: Stack(
-                      children: [
-                        // изображение из файла
-                        Positioned.fill(
-                          child: Icon(Icons.image_rounded,
-                              color: accentColor, size: 32),
-                        ),
-                        Positioned(
-                          top: 4,
-                          right: 4,
-                          child: GestureDetector(
-                            onTap: onRemove,
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: expiredColor,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.close,
-                                  size: 12, color: Colors.white),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.add_photo_alternate_outlined,
-                            color: textMutedColor, size: 24),
-                        const SizedBox(height: 4),
-                        Text('Добавить фото',
-                            style: GoogleFonts.nunito(
-                              color: textMutedColor,
-                              fontSize: 11,
-                            )),
-                      ],
-                    ),
-                  ),
-          ),
-        ),
-      ],
     );
   }
 }
