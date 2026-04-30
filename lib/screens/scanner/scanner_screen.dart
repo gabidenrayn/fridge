@@ -5,10 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/api_service.dart';
+import '../../providers/theme_provider.dart';
 import '../product/product_form_screen.dart';
 import '../../providers/product_provider.dart';
 
-/// Экран сканирования штрихкода
 class ScannerScreen extends StatefulWidget {
   const ScannerScreen({super.key});
 
@@ -39,17 +39,14 @@ class _ScannerScreenState extends State<ScannerScreen> {
     final code = barcode!.rawValue!;
     _showLoadingSnack(code);
 
-    // Запрос к Open Food Facts
     final food = await _api.getProductByBarcode(code);
 
     if (!mounted) return;
 
-    // Переходим на форму добавления продукта
-    final saved = await Navigator.push<bool>(
+    final saved = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ProductFormScreen(
-          // Предзаполняем данные из API
           initialName: food?.name,
           initialBrand: food?.brand,
           barcode: code,
@@ -58,13 +55,16 @@ class _ScannerScreenState extends State<ScannerScreen> {
     );
 
     if (saved == true && mounted) {
+      final t = context.read<ThemeProvider>();
       await context.read<ProductProvider>().loadProducts();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor:
               Theme.of(context).colorScheme.primary.withOpacity(0.8),
-          content: Text('Продукт добавлен!',
-              style: GoogleFonts.nunito(color: Colors.black87)),
+          content: Text(
+            t.getLocalizedString('product_added'),
+            style: GoogleFonts.nunito(color: Colors.black87),
+          ),
         ),
       );
     }
@@ -74,6 +74,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
   }
 
   void _showLoadingSnack(String code) {
+    final t = context.read<ThemeProvider>();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: Theme.of(context).cardTheme.color,
@@ -88,9 +89,11 @@ class _ScannerScreenState extends State<ScannerScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            Text('Поиск: $code',
-                style: GoogleFonts.nunito(
-                    color: Theme.of(context).textTheme.bodyLarge?.color)),
+            Text(
+              '${t.getLocalizedString('searching_barcode')} $code',
+              style: GoogleFonts.nunito(
+                  color: Theme.of(context).textTheme.bodyLarge?.color),
+            ),
           ],
         ),
         duration: const Duration(seconds: 2),
@@ -100,38 +103,34 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.watch<ThemeProvider>();
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
-          // ─── Камера ───
           MobileScanner(
             controller: _scanCtrl,
             onDetect: _onBarcodeDetected,
           ),
-
-          // ─── Рамка сканирования ───
           _ScanOverlay(),
-
-          // ─── UI элементы поверх камеры ───
           SafeArea(
             child: Column(
               children: [
-                // Заголовок
                 Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   child: Row(
                     children: [
-                      Text('СКАНЕР',
-                          style: GoogleFonts.exo2(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            letterSpacing: 2,
-                          )),
+                      Text(
+                        t.getLocalizedString('scanner'),
+                        style: GoogleFonts.exo2(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                          letterSpacing: 2,
+                        ),
+                      ),
                       const Spacer(),
-                      // Вспышка
                       GestureDetector(
                         onTap: () {
                           setState(() => _torchOn = !_torchOn);
@@ -158,10 +157,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                     ],
                   ),
                 ),
-
                 const Spacer(),
-
-                // Подсказка
                 Container(
                   margin: const EdgeInsets.all(20),
                   padding:
@@ -171,14 +167,12 @@ class _ScannerScreenState extends State<ScannerScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    'Наведите камеру на штрихкод продукта',
+                    t.getLocalizedString('scan_hint'),
                     style:
                         GoogleFonts.nunito(color: Colors.white70, fontSize: 13),
                     textAlign: TextAlign.center,
                   ),
                 ),
-
-                // Ручной ввод
                 GestureDetector(
                   onTap: () => Navigator.push(
                     context,
@@ -209,11 +203,13 @@ class _ScannerScreenState extends State<ScannerScreen> {
                               color: Theme.of(context).colorScheme.primary,
                               size: 16),
                           const SizedBox(width: 8),
-                          Text('Добавить вручную',
-                              style: GoogleFonts.exo2(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                              )),
+                          Text(
+                            t.getLocalizedString('add_manually'),
+                            style: GoogleFonts.exo2(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -228,7 +224,6 @@ class _ScannerScreenState extends State<ScannerScreen> {
   }
 }
 
-/// Полупрозрачный оверлей со рамкой сканирования
 class _ScanOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -244,9 +239,7 @@ class _ScanOverlay extends StatelessWidget {
           height: frameSize,
           child: Stack(
             children: [
-              // Угловые уголки рамки
               ..._corners(frameSize),
-              // Анимированная линия сканирования
               const _ScanLine(frameSize: frameSize),
             ],
           ),
@@ -324,7 +317,6 @@ class _OverlayPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-/// Анимированная линия сканирования
 class _ScanLine extends StatelessWidget {
   final double frameSize;
   const _ScanLine({required this.frameSize});

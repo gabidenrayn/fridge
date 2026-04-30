@@ -8,7 +8,6 @@ import '../../providers/theme_provider.dart';
 import '../../widgets/product_card.dart';
 import '../product/product_form_screen.dart';
 
-/// Экран поиска и фильтрации продуктов
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
 
@@ -36,52 +35,66 @@ class _SearchScreenState extends State<SearchScreen>
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = context.watch<ThemeProvider>();
+    final t = context.watch<ThemeProvider>();
     final provider = context.watch<ProductProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-            // Заголовок и поиск
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('ПОИСК',
-                      style: GoogleFonts.exo2(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.accent,
-                        letterSpacing: 2,
-                      )),
+                  Text(
+                    t.getLocalizedString('search_title'),
+                    style: GoogleFonts.exo2(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.accent,
+                      letterSpacing: 2,
+                    ),
+                  ),
                   const SizedBox(height: 12),
-                  // Поле поиска
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color:
+                          isDark ? AppColors.surface : AppColors.lightSurface,
                       borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(
+                          color: isDark
+                              ? AppColors.border
+                              : AppColors.lightBorder),
                     ),
                     child: TextField(
                       controller: _searchCtrl,
-                      style: GoogleFonts.nunito(color: AppColors.textPrimary),
+                      style: GoogleFonts.nunito(
+                          color: isDark
+                              ? AppColors.textPrimary
+                              : AppColors.lightTextPrimary),
                       decoration: InputDecoration(
-                        hintText: 'Поиск по названию...',
-                        hintStyle:
-                            GoogleFonts.nunito(color: AppColors.textMuted),
-                        prefixIcon: const Icon(Icons.search_rounded,
-                            color: AppColors.textMuted),
+                        hintText: t.getLocalizedString('search_placeholder'),
+                        hintStyle: GoogleFonts.nunito(
+                            color: isDark
+                                ? AppColors.textMuted
+                                : AppColors.lightTextMuted),
+                        prefixIcon: Icon(Icons.search_rounded,
+                            color: isDark
+                                ? AppColors.textMuted
+                                : AppColors.lightTextMuted),
                         suffixIcon: _searchCtrl.text.isNotEmpty
                             ? GestureDetector(
                                 onTap: () {
                                   _searchCtrl.clear();
                                   provider.setSearch('');
                                 },
-                                child: const Icon(Icons.close_rounded,
-                                    color: AppColors.textMuted),
+                                child: Icon(Icons.close_rounded,
+                                    color: isDark
+                                        ? AppColors.textMuted
+                                        : AppColors.lightTextMuted),
                               )
                             : null,
                         border: InputBorder.none,
@@ -97,8 +110,6 @@ class _SearchScreenState extends State<SearchScreen>
                 ],
               ),
             ),
-
-            // Вкладки
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: TabBar(
@@ -106,20 +117,19 @@ class _SearchScreenState extends State<SearchScreen>
                 indicatorColor: AppColors.accent,
                 indicatorWeight: 2,
                 labelColor: AppColors.accent,
-                unselectedLabelColor: AppColors.textMuted,
+                unselectedLabelColor:
+                    isDark ? AppColors.textMuted : AppColors.lightTextMuted,
                 labelStyle: GoogleFonts.exo2(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8),
-                tabs: const [
-                  Tab(text: 'ВСЕ'),
-                  Tab(text: 'СКОРО'),
-                  Tab(text: 'ПРОСРОЧЕНО'),
+                tabs: [
+                  Tab(text: t.getLocalizedString('tab_all')),
+                  Tab(text: t.getLocalizedString('tab_expiring')),
+                  Tab(text: t.getLocalizedString('tab_expired')),
                 ],
               ),
             ),
-
-            // Список
             Expanded(
               child: TabBarView(
                 controller: _tabCtrl,
@@ -128,18 +138,19 @@ class _SearchScreenState extends State<SearchScreen>
                     products: provider.products,
                     onTap: (p) => _openProduct(context, p),
                     onDelete: (p) => provider.deleteProduct(p),
+                    emptyMessage: t.getLocalizedString('not_found'),
                   ),
                   _ProductList(
                     products: provider.warningProducts,
                     onTap: (p) => _openProduct(context, p),
                     onDelete: (p) => provider.deleteProduct(p),
-                    emptyMessage: '✅ Нет продуктов с истекающим сроком',
+                    emptyMessage: t.getLocalizedString('no_expiring'),
                   ),
                   _ProductList(
                     products: provider.expiredProducts,
                     onTap: (p) => _openProduct(context, p),
                     onDelete: (p) => provider.deleteProduct(p),
-                    emptyMessage: '✅ Просроченных продуктов нет',
+                    emptyMessage: t.getLocalizedString('no_expired'),
                   ),
                 ],
               ),
@@ -168,17 +179,21 @@ class _ProductList extends StatelessWidget {
     required this.products,
     required this.onTap,
     required this.onDelete,
-    this.emptyMessage = 'Ничего не найдено',
+    required this.emptyMessage,
   });
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = context.watch<ThemeProvider>();
     if (products.isEmpty) {
       return Center(
-        child: Text(emptyMessage,
-            style:
-                GoogleFonts.nunito(color: AppColors.textMuted, fontSize: 14)),
+        child: Text(
+          emptyMessage,
+          style: GoogleFonts.nunito(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.textMuted
+                  : AppColors.lightTextMuted,
+              fontSize: 14),
+        ),
       );
     }
 

@@ -7,13 +7,12 @@ import '../../providers/product_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../models/product_model.dart';
 
-/// Экран статистики
 class StatsScreen extends StatelessWidget {
   const StatsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = context.watch<ThemeProvider>();
+    final t = context.watch<ThemeProvider>();
     final provider = context.watch<ProductProvider>();
     final total = provider.products.length;
     final fresh = provider.freshProducts.length;
@@ -28,61 +27,62 @@ class StatsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('СТАТИСТИКА',
-                  style: GoogleFonts.exo2(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.primary,
-                    letterSpacing: 2,
-                  )),
+              Text(
+                t.getLocalizedString('statistics'),
+                style: GoogleFonts.exo2(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.primary,
+                  letterSpacing: 2,
+                ),
+              ),
               const SizedBox(height: 20),
-
-              // Большой счётчик
               _BigCounter(total: total),
               const SizedBox(height: 20),
-
-              // Индикатор заполненности
               _FillIndicator(fresh: fresh, warning: warning, expired: expired),
               const SizedBox(height: 20),
-
-              // Карточки по статусам
               Row(
                 children: [
                   Expanded(
-                      child: _StatCard(
-                    icon: '🟢',
-                    label: 'Свежих',
-                    count: fresh,
-                    color: AppColors.fresh,
-                  )),
+                    child: _StatCard(
+                      icon: '🟢',
+                      label: t.getLocalizedString('fresh_label'),
+                      count: fresh,
+                      color: AppColors.fresh,
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
-                      child: _StatCard(
-                    icon: '🟡',
-                    label: 'Скоро',
-                    count: warning,
-                    color: AppColors.warning,
-                  )),
+                    child: _StatCard(
+                      icon: '🟡',
+                      label: t.getLocalizedString('warning_label'),
+                      count: warning,
+                      color: AppColors.warning,
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
-                      child: _StatCard(
-                    icon: '🔴',
-                    label: 'Просроч.',
-                    count: expired,
-                    color: AppColors.expired,
-                  )),
+                    child: _StatCard(
+                      icon: '🔴',
+                      label: t.getLocalizedString('expired_label'),
+                      count: expired,
+                      color: AppColors.expired,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
-
-              // По категориям
-              Text('ПО КАТЕГОРИЯМ',
-                  style: GoogleFonts.exo2(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textMuted,
-                    letterSpacing: 1.5,
-                  )),
+              Text(
+                t.getLocalizedString('by_category'),
+                style: GoogleFonts.exo2(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textMuted
+                      : AppColors.lightTextMuted,
+                  letterSpacing: 1.5,
+                ),
+              ),
               const SizedBox(height: 12),
               _CategoryBreakdown(products: provider.products),
             ],
@@ -99,8 +99,8 @@ class _BigCounter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = context.watch<ThemeProvider>();
-    final isDark = themeProvider.isDarkMode;
+    final t = context.watch<ThemeProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final accentColor = isDark ? AppColors.accent : AppColors.lightAccent;
     final accentDarkColor =
         isDark ? AppColors.accentDark : AppColors.lightAccentDark;
@@ -127,26 +127,31 @@ class _BigCounter extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Продуктов\nв холодильнике',
-                  style: GoogleFonts.nunito(
-                    color: textSecondaryColor,
-                    fontSize: 13,
-                  )),
-              Text('$total',
-                  style: GoogleFonts.exo2(
-                    fontSize: 52,
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.primary,
-                  )),
+              Text(
+                t.getLocalizedString('products_in_fridge'),
+                style: GoogleFonts.nunito(
+                  color: textSecondaryColor,
+                  fontSize: 13,
+                ),
+              ),
+              Text(
+                '$total',
+                style: GoogleFonts.exo2(
+                  fontSize: 52,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
             ],
           ),
           const Spacer(),
           const Text('❄️', style: TextStyle(fontSize: 56))
               .animate(onPlay: (c) => c.repeat(reverse: true))
               .scale(
-                  begin: const Offset(1, 1),
-                  end: const Offset(1.05, 1.05),
-                  duration: 2000.ms),
+                begin: const Offset(1, 1),
+                end: const Offset(1.05, 1.05),
+                duration: 2000.ms,
+              ),
         ],
       ),
     ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.2, end: 0);
@@ -163,8 +168,8 @@ class _FillIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = context.watch<ThemeProvider>();
-    final isDark = themeProvider.isDarkMode;
+    final t = context.watch<ThemeProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final surfaceColor = isDark ? AppColors.surface : AppColors.lightSurface;
     final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
     final freshColor = isDark ? AppColors.fresh : AppColors.lightFresh;
@@ -190,12 +195,14 @@ class _FillIndicator extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('ЗАПОЛНЕННОСТЬ',
-              style: GoogleFonts.exo2(
-                fontSize: 9,
-                color: textMutedColor,
-                letterSpacing: 1.2,
-              )),
+          Text(
+            t.getLocalizedString('fill_level'),
+            style: GoogleFonts.exo2(
+              fontSize: 9,
+              color: textMutedColor,
+              letterSpacing: 1.2,
+            ),
+          ),
           const SizedBox(height: 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(6),
@@ -221,9 +228,9 @@ class _FillIndicator extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${(fFresh * 100).round()}% свежих · '
-            '${(fWarn * 100).round()}% скоро · '
-            '${(fExp * 100).round()}% просрочено',
+            '${(fFresh * 100).round()}% ${t.getLocalizedString('fresh')} · '
+            '${(fWarn * 100).round()}% ${t.getLocalizedString('expiring')} · '
+            '${(fExp * 100).round()}% ${t.getLocalizedString('expired')}',
             style: GoogleFonts.nunito(color: textMutedColor, fontSize: 11),
           ),
         ],
@@ -246,8 +253,7 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = context.watch<ThemeProvider>();
-    final textMutedColor = themeProvider.isDarkMode
+    final textMutedColor = Theme.of(context).brightness == Brightness.dark
         ? AppColors.textMuted
         : AppColors.lightTextMuted;
 
@@ -262,17 +268,18 @@ class _StatCard extends StatelessWidget {
         children: [
           Text(icon, style: const TextStyle(fontSize: 24)),
           const SizedBox(height: 6),
-          Text('$count',
-              style: GoogleFonts.exo2(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: color,
-              )),
-          Text(label,
-              style: GoogleFonts.nunito(
-                fontSize: 10,
-                color: textMutedColor,
-              )),
+          Text(
+            '$count',
+            style: GoogleFonts.exo2(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+          Text(
+            label,
+            style: GoogleFonts.nunito(fontSize: 10, color: textMutedColor),
+          ),
         ],
       ),
     );
@@ -285,8 +292,7 @@ class _CategoryBreakdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = context.watch<ThemeProvider>();
-    final isDark = themeProvider.isDarkMode;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final surfaceColor = isDark ? AppColors.surface : AppColors.lightSurface;
     final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
     final textPrimaryColor =
@@ -323,9 +329,7 @@ class _CategoryBreakdown extends StatelessWidget {
                   children: [
                     Text(e.key.label,
                         style: GoogleFonts.nunito(
-                          color: textPrimaryColor,
-                          fontSize: 12,
-                        )),
+                            color: textPrimaryColor, fontSize: 12)),
                     const SizedBox(height: 4),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(3),
@@ -340,12 +344,14 @@ class _CategoryBreakdown extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              Text('${e.value}',
-                  style: GoogleFonts.exo2(
-                    color: textSecondaryColor,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  )),
+              Text(
+                '${e.value}',
+                style: GoogleFonts.exo2(
+                  color: textSecondaryColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         );

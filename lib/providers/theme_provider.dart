@@ -5,7 +5,7 @@ class ThemeProvider extends ChangeNotifier {
   static const String _themeKey = 'theme_mode';
   static const String _languageKey = 'language';
 
-  ThemeMode _themeMode = ThemeMode.dark;
+  ThemeMode _themeMode = ThemeMode.light;
   String _language = 'ru';
 
   ThemeMode get themeMode => _themeMode;
@@ -125,9 +125,54 @@ class ThemeProvider extends ChangeNotifier {
     'ingredients': '🧂 Ингредиенты',
     'cooking': '👨‍🍳 Приготовление',
     'empty_fridge_timeline': '🧊 Холодильник пуст',
+    // Семья
+    'join_family': 'Войти в семью',
+    'tab_search': 'Поиск',
+    'tab_my_requests': 'Мои запросы',
+    'search_family_hint': 'Введите название семьи...',
+    'optional_message': 'Сообщение для владельца (необязательно)...',
+    'search_min_chars': 'Введите минимум 2 символа',
+    'families_not_found': 'Семьи не найдены',
+    'search_error': 'Ошибка поиска. Проверьте соединение.',
+    'join_btn': 'Вступить',
+    'members_count': 'участников',
+    'no_requests': 'Нет отправленных запросов',
+    'request_pending': 'Ожидает',
+    'request_accepted': 'Принят',
+    'request_rejected': 'Отклонён',
+    'request_sent': 'Запрос отправлен в',
+    'not_authorized': 'Не авторизован',
+    'leave_family': 'Выйти',
+    'leave_family_title': 'Выйти из семьи?',
+    'leave_family_body': 'Вы покинете семейный аккаунт и вернётесь к личному.',
+    'type': 'Тип',
+    'owner': 'Владелец',
+    'owner_you': 'Вы',
+    'owner_other': 'Другой',
+    'family_members': 'Члены семьи',
+    'personal_account': 'Личный аккаунт',
+    'family_account': 'Семейный аккаунт',
+    'personal_type': 'Личный',
+    'family_type': 'Семейный',
+
+    'family_account_title': 'Семейный аккаунт',
+    'family_name_label': 'Название семьи',
+    'family_name_hint': 'Напр., Семья Ивановых',
+    'create_btn': 'Создать',
+    'add_member_title': 'Добавить участника',
+    'member_email_label': 'Email участника',
+    'manage_requests': 'Управить запросами',
   };
 
   static const Map<String, String> _enStrings = {
+    'family_account_title': 'Family Account',
+    'family_name_label': 'Family Name',
+    'family_name_hint': 'e.g., The Smith Family',
+    'create_btn': 'Create',
+    'add_member_title': 'Add Member',
+    'member_email_label': 'Member Email',
+    'manage_requests': 'Manage Requests',
+
     'app_title': 'SmartFridge',
     'manage_products': 'Product Management',
     'fridge': 'Fridge',
@@ -199,5 +244,35 @@ class ThemeProvider extends ChangeNotifier {
     'ingredients': '🧂 Ingredients',
     'cooking': '👨‍🍳 Cooking steps',
     'empty_fridge_timeline': '🧊 Fridge is empty',
+    // Family
+    'join_family': 'Join Family',
+    'tab_search': 'Search',
+    'tab_my_requests': 'My Requests',
+    'search_family_hint': 'Search family name...',
+    'optional_message': 'Optional message to family owner...',
+    'search_min_chars': 'Enter at least 2 characters',
+    'families_not_found': 'No families found',
+    'search_error': 'Search error. Check your connection.',
+    'join_btn': 'Join',
+    'members_count': 'members',
+    'no_requests': 'No requests sent',
+    'request_pending': 'Pending',
+    'request_accepted': 'Accepted',
+    'request_rejected': 'Rejected',
+    'request_sent': 'Request sent to',
+    'not_authorized': 'Not authorized',
+    'leave_family': 'Leave',
+    'leave_family_title': 'Leave family?',
+    'leave_family_body':
+        'You will leave the family account and return to a personal one.',
+    'type': 'Type',
+    'owner': 'Owner',
+    'owner_you': 'You',
+    'owner_other': 'Other',
+    'family_members': 'Family members',
+    'personal_account': 'Personal Account',
+    'family_account': 'Family Account',
+    'personal_type': 'Personal',
+    'family_type': 'Family',
   };
 }

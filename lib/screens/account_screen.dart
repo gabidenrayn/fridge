@@ -8,7 +8,6 @@ import '../core/constants/app_colors.dart';
 import 'family/family_management_screen.dart';
 import 'family/family_request_screen.dart';
 
-/// Экран управления аккаунтом
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
 
@@ -29,10 +28,9 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _createFamilyAccount() async {
-    final authProvider = context.read<AuthProvider>();
-    final error = await authProvider.createFamilyAccount(
-      _familyNameController.text.trim(),
-    );
+    final error = await context
+        .read<AuthProvider>()
+        .createFamilyAccount(_familyNameController.text.trim());
     if (error != null) {
       setState(() => _errorMessage = error);
     } else {
@@ -42,10 +40,9 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _addFamilyMember() async {
-    final authProvider = context.read<AuthProvider>();
-    final error = await authProvider.addFamilyMember(
-      _memberEmailController.text.trim(),
-    );
+    final error = await context
+        .read<AuthProvider>()
+        .addFamilyMember(_memberEmailController.text.trim());
     if (error != null) {
       setState(() => _errorMessage = error);
     } else {
@@ -55,8 +52,8 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _removeFamilyMember(String memberId) async {
-    final authProvider = context.read<AuthProvider>();
-    final error = await authProvider.removeFamilyMember(memberId);
+    final error =
+        await context.read<AuthProvider>().removeFamilyMember(memberId);
     if (error != null) setState(() => _errorMessage = error);
   }
 
@@ -69,10 +66,60 @@ class _AccountScreenState extends State<AccountScreen> {
     await context.read<AuthProvider>().signOut();
   }
 
+  Future<void> _leaveFamily() async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final t = context.read<ThemeProvider>();
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surface : AppColors.lightSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          t.getLocalizedString('leave_family_title'),
+          style: GoogleFonts.exo2(
+            fontWeight: FontWeight.w700,
+            color: isDark ? AppColors.textPrimary : AppColors.lightTextPrimary,
+          ),
+        ),
+        content: Text(
+          t.getLocalizedString('leave_family_body'),
+          style: GoogleFonts.nunito(
+            fontSize: 14,
+            color:
+                isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              t.getLocalizedString('cancel'),
+              style: TextStyle(
+                  color:
+                      isDark ? AppColors.textMuted : AppColors.lightTextMuted),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              t.getLocalizedString('leave_family'),
+              style: const TextStyle(
+                  color: Colors.red, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      final error = await context.read<AuthProvider>().leaveFamily();
+      if (error != null) setState(() => _errorMessage = error);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
-    final themeProvider = context.watch<ThemeProvider>();
+    final t = context.watch<ThemeProvider>();
     final account = authProvider.accountModel;
     final user = authProvider.userModel;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -90,7 +137,7 @@ class _AccountScreenState extends State<AccountScreen> {
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         title: Text(
-          themeProvider.getLocalizedString('account'),
+          t.getLocalizedString('account'),
           style: GoogleFonts.exo2(
             color: Theme.of(context).appBarTheme.foregroundColor,
             fontWeight: FontWeight.w700,
@@ -108,13 +155,13 @@ class _AccountScreenState extends State<AccountScreen> {
       body: !authProvider.isReady
           ? Center(child: CircularProgressIndicator(color: accent))
           : account == null || user == null
-              ? _buildErrorState(themeProvider, accent)
+              ? _buildErrorState(t, accent)
               : SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // ── Аватар ──────────────────────────────────────────
+                      // ── Аватар ──────────────────────────────────
                       Container(
                         width: 88,
                         height: 88,
@@ -139,7 +186,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       ),
                       const SizedBox(height: 14),
 
-                      // ── Имя и email ─────────────────────────────────────
+                      // ── Имя ────────────────────────────────────
                       Text(
                         user.name,
                         style: GoogleFonts.exo2(
@@ -157,17 +204,13 @@ class _AccountScreenState extends State<AccountScreen> {
                           Icon(Icons.email_outlined,
                               size: 13, color: textMuted),
                           const SizedBox(width: 4),
-                          Text(
-                            user.email,
-                            style: GoogleFonts.nunito(
-                              color: textMuted,
-                              fontSize: 13,
-                            ),
-                          ),
+                          Text(user.email,
+                              style: GoogleFonts.nunito(
+                                  color: textMuted, fontSize: 13)),
                         ],
                       ),
 
-                      // Тип аккаунта-бейдж
+                      // ── Бейдж типа аккаунта ─────────────────────
                       const SizedBox(height: 10),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -190,8 +233,8 @@ class _AccountScreenState extends State<AccountScreen> {
                             const SizedBox(width: 5),
                             Text(
                               account.type == AccountType.personal
-                                  ? 'Личный аккаунт'
-                                  : 'Семейный аккаунт',
+                                  ? t.getLocalizedString('personal_account')
+                                  : t.getLocalizedString('family_account'),
                               style: GoogleFonts.exo2(
                                 fontSize: 11,
                                 color: accent,
@@ -203,48 +246,84 @@ class _AccountScreenState extends State<AccountScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // ── Карточка аккаунта ────────────────────────────────
+                      // ── Карточка аккаунта ───────────────────────
                       _SectionCard(
                         cardColor: cardColor,
                         borderColor: borderColor,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _SectionTitle(
-                              title:
-                                  themeProvider.getLocalizedString('account'),
-                              icon: Icons.account_circle_outlined,
-                              accent: accent,
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _SectionTitle(
+                                    title: t.getLocalizedString('account'),
+                                    icon: Icons.account_circle_outlined,
+                                    accent: accent,
+                                  ),
+                                ),
+                                if (account.type == AccountType.family)
+                                  GestureDetector(
+                                    onTap: _leaveFamily,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 5),
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                            color: Colors.red.withOpacity(0.4)),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.logout_rounded,
+                                              size: 13, color: Colors.red),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            t.getLocalizedString(
+                                                'leave_family'),
+                                            style: GoogleFonts.exo2(
+                                              fontSize: 11,
+                                              color: Colors.red,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                             const SizedBox(height: 12),
                             _InfoRow(
-                              label: themeProvider.getLocalizedString('name'),
+                              label: t.getLocalizedString('name'),
                               value: account.name,
                               textSecondary: textSecondary,
                               isDark: isDark,
                             ),
                             const SizedBox(height: 8),
                             _InfoRow(
-                              label: themeProvider.getLocalizedString('type'),
+                              label: t.getLocalizedString('type'),
                               value: account.type == AccountType.personal
-                                  ? 'Личный'
-                                  : 'Семейный',
+                                  ? t.getLocalizedString('personal_type')
+                                  : t.getLocalizedString('family_type'),
                               textSecondary: textSecondary,
                               isDark: isDark,
                             ),
                             if (account.type == AccountType.family) ...[
                               const SizedBox(height: 8),
                               _InfoRow(
-                                label: 'Владелец',
+                                label: t.getLocalizedString('owner'),
                                 value: account.ownerId == user.id
-                                    ? 'Вы'
-                                    : 'Другой',
+                                    ? t.getLocalizedString('owner_you')
+                                    : t.getLocalizedString('owner_other'),
                                 textSecondary: textSecondary,
                                 isDark: isDark,
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'Члены семьи',
+                                t.getLocalizedString('family_members'),
                                 style: GoogleFonts.exo2(
                                   fontSize: 11,
                                   color: textMuted,
@@ -270,7 +349,7 @@ class _AccountScreenState extends State<AccountScreen> {
                       ),
                       const SizedBox(height: 12),
 
-                      // ── Настройки ────────────────────────────────────────
+                      // ── Настройки ───────────────────────────────
                       _SectionCard(
                         cardColor: cardColor,
                         borderColor: borderColor,
@@ -278,18 +357,15 @@ class _AccountScreenState extends State<AccountScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _SectionTitle(
-                              title:
-                                  themeProvider.getLocalizedString('settings'),
+                              title: t.getLocalizedString('settings'),
                               icon: Icons.settings_outlined,
                               accent: accent,
                             ),
                             const SizedBox(height: 16),
-
-                            // Тема
                             Row(
                               children: [
                                 Icon(
-                                  themeProvider.isDarkMode
+                                  t.isDarkMode
                                       ? Icons.dark_mode_outlined
                                       : Icons.light_mode_outlined,
                                   size: 18,
@@ -298,7 +374,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
-                                    themeProvider.getLocalizedString('theme'),
+                                    t.getLocalizedString('theme'),
                                     style: GoogleFonts.nunito(
                                       color: Theme.of(context)
                                           .textTheme
@@ -309,21 +385,19 @@ class _AccountScreenState extends State<AccountScreen> {
                                   ),
                                 ),
                                 Text(
-                                  themeProvider.isDarkMode
-                                      ? themeProvider
-                                          .getLocalizedString('dark_theme')
-                                      : themeProvider
-                                          .getLocalizedString('light_theme'),
+                                  t.isDarkMode
+                                      ? t.getLocalizedString('dark_theme')
+                                      : t.getLocalizedString('light_theme'),
                                   style: GoogleFonts.nunito(
                                       color: textMuted, fontSize: 13),
                                 ),
                                 const SizedBox(width: 8),
                                 Switch(
-                                  value: themeProvider.isDarkMode,
+                                  value: t.isDarkMode,
                                   onChanged: (value) {
-                                    themeProvider.setThemeMode(
-                                      value ? ThemeMode.dark : ThemeMode.light,
-                                    );
+                                    t.setThemeMode(value
+                                        ? ThemeMode.dark
+                                        : ThemeMode.light);
                                   },
                                   activeThumbColor: isDark
                                       ? AppColors.accent
@@ -331,10 +405,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                 ),
                               ],
                             ),
-
                             Divider(color: borderColor, height: 24),
-
-                            // Язык
                             Row(
                               children: [
                                 Icon(Icons.language_outlined,
@@ -342,8 +413,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
-                                    themeProvider
-                                        .getLocalizedString('language'),
+                                    t.getLocalizedString('language'),
                                     style: GoogleFonts.nunito(
                                       color: Theme.of(context)
                                           .textTheme
@@ -355,7 +425,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                 ),
                                 DropdownButtonHideUnderline(
                                   child: DropdownButton<String>(
-                                    value: themeProvider.language,
+                                    value: t.language,
                                     dropdownColor: isDark
                                         ? AppColors.surface
                                         : AppColors.lightSurface,
@@ -367,19 +437,19 @@ class _AccountScreenState extends State<AccountScreen> {
                                     ),
                                     onChanged: (String? newValue) {
                                       if (newValue != null) {
-                                        themeProvider.setLanguage(newValue);
+                                        t.setLanguage(newValue);
                                       }
                                     },
                                     items: [
                                       DropdownMenuItem(
                                         value: 'ru',
-                                        child: Text(themeProvider
-                                            .getLocalizedString('russian')),
+                                        child: Text(
+                                            t.getLocalizedString('russian')),
                                       ),
                                       DropdownMenuItem(
                                         value: 'en',
-                                        child: Text(themeProvider
-                                            .getLocalizedString('english')),
+                                        child: Text(
+                                            t.getLocalizedString('english')),
                                       ),
                                     ],
                                   ),
@@ -390,7 +460,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         ),
                       ),
 
-                      // ── Создать семейный аккаунт// ---- Create family account ------
+                      // ── Создать семейный аккаунт ─────────────────
                       if (account.type == AccountType.personal) ...[
                         const SizedBox(height: 12),
                         _SectionCard(
@@ -400,7 +470,8 @@ class _AccountScreenState extends State<AccountScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _SectionTitle(
-                                title: 'Family Account',
+                                title: t
+                                    .getLocalizedString('family_account_title'),
                                 icon: Icons.group_add_outlined,
                                 accent: accent,
                               ),
@@ -412,9 +483,11 @@ class _AccountScreenState extends State<AccountScreen> {
                                       ? AppColors.textPrimary
                                       : AppColors.lightTextPrimary,
                                 ),
-                                decoration: const InputDecoration(
-                                  labelText: 'Family Name',
-                                  hintText: 'e.g., The Smith Family',
+                                decoration: InputDecoration(
+                                  labelText:
+                                      t.getLocalizedString('family_name_label'),
+                                  hintText:
+                                      t.getLocalizedString('family_name_hint'),
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -423,15 +496,16 @@ class _AccountScreenState extends State<AccountScreen> {
                                 child: ElevatedButton.icon(
                                   onPressed: _createFamilyAccount,
                                   icon: const Icon(Icons.add_rounded, size: 18),
-                                  label: const Text('Create'),
+                                  label:
+                                      Text(t.getLocalizedString('create_btn')),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: accent,
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 12),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
                                   ),
                                 ),
                               ),
@@ -439,22 +513,23 @@ class _AccountScreenState extends State<AccountScreen> {
                               SizedBox(
                                 width: double.infinity,
                                 child: OutlinedButton.icon(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const FamilyRequestScreen(),
-                                      ),
-                                    );
-                                  },
-                                  icon: const Icon(Icons.search_rounded, size: 18),
-                                  label: const Text('Join Family'),
+                                  onPressed: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const FamilyRequestScreen(),
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.search_rounded,
+                                      size: 18),
+                                  label:
+                                      Text(t.getLocalizedString('join_family')),
                                   style: OutlinedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 12),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
                                     side: BorderSide(color: accent),
                                   ),
                                 ),
@@ -464,7 +539,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         ),
                       ],
 
-                      // ── Добавить члена семьи// ---- Add family member ------
+                      // ── Добавить члена семьи ─────────────────────
                       if (account.type == AccountType.family &&
                           account.ownerId == user.id) ...[
                         const SizedBox(height: 12),
@@ -475,7 +550,7 @@ class _AccountScreenState extends State<AccountScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _SectionTitle(
-                                title: 'Add Member',
+                                title: t.getLocalizedString('add_member_title'),
                                 icon: Icons.person_add_outlined,
                                 accent: accent,
                               ),
@@ -488,8 +563,9 @@ class _AccountScreenState extends State<AccountScreen> {
                                       ? AppColors.textPrimary
                                       : AppColors.lightTextPrimary,
                                 ),
-                                decoration: const InputDecoration(
-                                  labelText: 'Member Email',
+                                decoration: InputDecoration(
+                                  labelText: t
+                                      .getLocalizedString('member_email_label'),
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -499,15 +575,15 @@ class _AccountScreenState extends State<AccountScreen> {
                                   onPressed: _addFamilyMember,
                                   icon: const Icon(Icons.person_add_rounded,
                                       size: 18),
-                                  label: const Text('Add'),
+                                  label: Text(t.getLocalizedString('add')),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: accent,
                                     foregroundColor: Colors.white,
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 12),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
                                   ),
                                 ),
                               ),
@@ -515,22 +591,24 @@ class _AccountScreenState extends State<AccountScreen> {
                               SizedBox(
                                 width: double.infinity,
                                 child: OutlinedButton.icon(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const FamilyManagementScreen(),
-                                      ),
-                                    );
-                                  },
-                                  icon: const Icon(Icons.manage_accounts_rounded, size: 18),
-                                  label: const Text('Manage Requests'),
+                                  onPressed: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const FamilyManagementScreen(),
+                                    ),
+                                  ),
+                                  icon: const Icon(
+                                      Icons.manage_accounts_rounded,
+                                      size: 18),
+                                  label: Text(
+                                      t.getLocalizedString('manage_requests')),
                                   style: OutlinedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 12),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
                                     side: BorderSide(color: accent),
                                   ),
                                 ),
@@ -540,7 +618,7 @@ class _AccountScreenState extends State<AccountScreen> {
                         ),
                       ],
 
-                      // ── Ошибка ────────────────────────────────────────────
+                      // ── Ошибка ──────────────────────────────────
                       if (_errorMessage != null) ...[
                         const SizedBox(height: 12),
                         Container(
@@ -572,7 +650,7 @@ class _AccountScreenState extends State<AccountScreen> {
     );
   }
 
-  Widget _buildErrorState(ThemeProvider themeProvider, Color accent) {
+  Widget _buildErrorState(ThemeProvider t, Color accent) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -582,13 +660,13 @@ class _AccountScreenState extends State<AccountScreen> {
             const Icon(Icons.error_outline, size: 56, color: AppColors.warning),
             const SizedBox(height: 16),
             Text(
-              themeProvider.getLocalizedString('error'),
+              t.getLocalizedString('error'),
               textAlign: TextAlign.center,
               style: GoogleFonts.exo2(fontSize: 16),
             ),
             const SizedBox(height: 8),
             Text(
-              'Попробуйте обновить данные или выйти и войти снова.',
+              t.getLocalizedString('leave_family_body'),
               textAlign: TextAlign.center,
               style: GoogleFonts.nunito(fontSize: 13),
             ),
@@ -596,7 +674,7 @@ class _AccountScreenState extends State<AccountScreen> {
             ElevatedButton(
               onPressed: _reloadProfile,
               style: ElevatedButton.styleFrom(backgroundColor: accent),
-              child: Text(themeProvider.getLocalizedString('retry')),
+              child: Text(t.getLocalizedString('retry')),
             ),
           ],
         ),
@@ -605,12 +683,11 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 }
 
-// ── Вспомогательные виджеты ────────────────────────────────────────────────
+// ── Вспомогательные виджеты ───────────────────────────────────────────────
 
 class _SectionCard extends StatelessWidget {
   final Widget child;
-  final Color cardColor;
-  final Color borderColor;
+  final Color cardColor, borderColor;
 
   const _SectionCard({
     required this.child,
@@ -669,8 +746,7 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
+  final String label, value;
   final Color textSecondary;
   final bool isDark;
 
@@ -685,13 +761,8 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(
-          '$label:',
-          style: GoogleFonts.nunito(
-            fontSize: 13,
-            color: textSecondary,
-          ),
-        ),
+        Text('$label:',
+            style: GoogleFonts.nunito(fontSize: 13, color: textSecondary)),
         const SizedBox(width: 8),
         Text(
           value,

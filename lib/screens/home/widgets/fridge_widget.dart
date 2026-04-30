@@ -1,12 +1,12 @@
 import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../providers/theme_provider.dart';
 import '../home_screen.dart';
 
-/// Анимированный холодильник с разделением на секции
 class FridgeWidget extends StatefulWidget {
   final StorageSection? openSection;
   final Function(StorageSection?) onSectionTap;
@@ -33,7 +33,6 @@ class FridgeWidget extends StatefulWidget {
   State<FridgeWidget> createState() => _FridgeWidgetState();
 }
 
-// FIX: TickerProviderStateMixin вместо SingleTickerProviderStateMixin
 class _FridgeWidgetState extends State<FridgeWidget>
     with TickerProviderStateMixin {
   late AnimationController _fridgeDoorCtrl;
@@ -86,6 +85,7 @@ class _FridgeWidgetState extends State<FridgeWidget>
 
   @override
   Widget build(BuildContext context) {
+    final t = context.watch<ThemeProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isOpen = widget.openSection != null;
 
@@ -108,7 +108,7 @@ class _FridgeWidgetState extends State<FridgeWidget>
                       width: sectionWidth,
                       height: sectionWidth,
                       child: _SectionCard(
-                        label: 'Холодильник',
+                        label: t.getLocalizedString('fridge'),
                         icon: Icons.kitchen_rounded,
                         count: widget.fridgeItems,
                         isActive: widget.openSection == StorageSection.fridge,
@@ -125,7 +125,7 @@ class _FridgeWidgetState extends State<FridgeWidget>
                       width: sectionWidth,
                       height: sectionWidth,
                       child: _SectionCard(
-                        label: 'Морозильник',
+                        label: t.getLocalizedString('freezer'),
                         icon: Icons.ac_unit_rounded,
                         count: widget.freezerItems,
                         isActive: widget.openSection == StorageSection.freezer,
@@ -145,7 +145,6 @@ class _FridgeWidgetState extends State<FridgeWidget>
                   child: Stack(
                     clipBehavior: Clip.hardEdge,
                     children: [
-                      // Тело
                       _FridgeBody(
                         width: widget.width,
                         fridgeH: fridgeH,
@@ -165,8 +164,6 @@ class _FridgeWidgetState extends State<FridgeWidget>
                         ),
                         isDark: isDark,
                       ),
-
-                      // Дверца холодильника
                       Positioned(
                         top: 0,
                         left: 0,
@@ -187,8 +184,6 @@ class _FridgeWidgetState extends State<FridgeWidget>
                           ),
                         ),
                       ),
-
-                      // Дверца морозильника
                       Positioned(
                         top: fridgeH,
                         left: 0,
@@ -209,14 +204,12 @@ class _FridgeWidgetState extends State<FridgeWidget>
                           ),
                         ),
                       ),
-
                       if (widget.fridgeExpiring > 0)
                         Positioned(
                           top: -8,
                           right: -8,
                           child: _ExpiryBadge(count: widget.fridgeExpiring),
                         ),
-
                       if (widget.freezerExpiring > 0)
                         Positioned(
                           bottom: -8,
@@ -283,6 +276,7 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.watch<ThemeProvider>();
     final theme = Theme.of(context);
     return GestureDetector(
       onTap: onTap,
@@ -327,7 +321,7 @@ class _SectionCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '$count товаров',
+              '$count ${t.getLocalizedString('products_word')}',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.textTheme.bodyMedium?.color?.withOpacity(0.75),
@@ -361,11 +355,11 @@ class _FridgeBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.watch<ThemeProvider>();
     final rimColor = isDark ? AppColors.borderLight : const Color(0xFFBFDBFE);
 
     return Column(
       children: [
-        // Холодильник (верхняя часть, 68%)
         GestureDetector(
           onTap: onFridgeTap,
           child: Container(
@@ -395,13 +389,12 @@ class _FridgeBody extends StatelessWidget {
             child: openSection == StorageSection.fridge
                 ? _FridgeInner(totalItems: fridgeItems, isDark: isDark)
                 : _ClosedLabel(
-                    label: 'Холодильник',
+                    label: t.getLocalizedString('fridge'),
                     icon: Icons.kitchen_rounded,
-                    isDark: isDark),
+                    isDark: isDark,
+                  ),
           ),
         ),
-
-        // Уплотнитель
         Container(
           width: width,
           height: 14,
@@ -429,8 +422,6 @@ class _FridgeBody extends StatelessWidget {
                     )),
           ),
         ),
-
-        // Морозильник (нижняя часть, 32% - 14px gasket)
         GestureDetector(
           onTap: onFreezerTap,
           child: Container(
@@ -460,7 +451,7 @@ class _FridgeBody extends StatelessWidget {
             child: openSection == StorageSection.freezer
                 ? _FreezerInner(totalItems: freezerItems, isDark: isDark)
                 : _ClosedLabel(
-                    label: 'Морозильник',
+                    label: t.getLocalizedString('freezer'),
                     icon: Icons.ac_unit_rounded,
                     isDark: isDark,
                     isFreezer: true,
@@ -516,6 +507,7 @@ class _FridgeInner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.watch<ThemeProvider>();
     return Padding(
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -536,12 +528,14 @@ class _FridgeInner extends StatelessWidget {
             if (i < 2) const SizedBox(height: 6),
           ],
           const Spacer(),
-          Text('$totalItems продуктов',
-              style: GoogleFonts.exo2(
-                fontSize: 8,
-                color: Theme.of(context).colorScheme.primary,
-                letterSpacing: 0.8,
-              )),
+          Text(
+            '$totalItems ${t.getLocalizedString('products_count')}',
+            style: GoogleFonts.exo2(
+              fontSize: 8,
+              color: Theme.of(context).colorScheme.primary,
+              letterSpacing: 0.8,
+            ),
+          ),
         ],
       ),
     );
@@ -555,6 +549,7 @@ class _FreezerInner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.watch<ThemeProvider>();
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Column(
@@ -572,12 +567,14 @@ class _FreezerInner extends StatelessWidget {
           const SizedBox(height: 6),
           _FreezerShelf(isDark: isDark),
           const Spacer(),
-          Text('$totalItems продуктов',
-              style: GoogleFonts.exo2(
-                fontSize: 7,
-                color: Theme.of(context).colorScheme.primary,
-                letterSpacing: 0.8,
-              )),
+          Text(
+            '$totalItems ${t.getLocalizedString('products_count')}',
+            style: GoogleFonts.exo2(
+              fontSize: 7,
+              color: Theme.of(context).colorScheme.primary,
+              letterSpacing: 0.8,
+            ),
+          ),
         ],
       ),
     );
@@ -607,15 +604,15 @@ class _FridgeShelf extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(
-            4,
-            (i) => _ShelfItem(
-                  color: [
-                    freshColor,
-                    warningColor,
-                    freshColor,
-                    accentColor
-                  ][(index * 4 + i) % 4],
-                )),
+          4,
+          (i) => _ShelfItem(
+              color: [
+            freshColor,
+            warningColor,
+            freshColor,
+            accentColor
+          ][(index * 4 + i) % 4]),
+        ),
       ),
     );
   }
@@ -643,10 +640,10 @@ class _FreezerShelf extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: List.generate(
-            3,
-            (i) => _ShelfItem(
-                  color: [freshColor, warningColor, accentColor][i % 3],
-                )),
+          3,
+          (i) =>
+              _ShelfItem(color: [freshColor, warningColor, accentColor][i % 3]),
+        ),
       ),
     );
   }
@@ -678,6 +675,7 @@ class _FridgeDoorSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.watch<ThemeProvider>();
     final rimColor = isDark ? AppColors.borderLight : const Color(0xFF93C5FD);
     final handleColor =
         isDark ? AppColors.fridgeHandle : const Color(0xFF93C5FD);
@@ -735,12 +733,14 @@ class _FridgeDoorSection extends StatelessWidget {
                     Icon(Icons.kitchen_rounded, color: accentColor, size: 22),
               ),
               const SizedBox(height: 8),
-              Text('Холодильник',
-                  style: GoogleFonts.exo2(
-                    fontSize: 11,
-                    color: accentColor.withOpacity(0.8),
-                    fontWeight: FontWeight.w600,
-                  )),
+              Text(
+                t.getLocalizedString('fridge'),
+                style: GoogleFonts.exo2(
+                  fontSize: 11,
+                  color: accentColor.withOpacity(0.8),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         ),
@@ -757,6 +757,7 @@ class _FreezerDoorSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.watch<ThemeProvider>();
     final rimColor = isDark ? AppColors.borderLight : const Color(0xFFA78BFA);
     final handleColor =
         isDark ? AppColors.fridgeHandle : const Color(0xFFA78BFA);
@@ -814,12 +815,14 @@ class _FreezerDoorSection extends StatelessWidget {
                     Icon(Icons.ac_unit_rounded, color: accentColor, size: 16),
               ),
               const SizedBox(height: 4),
-              Text('Морозильник',
-                  style: GoogleFonts.exo2(
-                    fontSize: 9,
-                    color: accentColor.withOpacity(0.8),
-                    fontWeight: FontWeight.w600,
-                  )),
+              Text(
+                t.getLocalizedString('freezer'),
+                style: GoogleFonts.exo2(
+                  fontSize: 9,
+                  color: accentColor.withOpacity(0.8),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         ),

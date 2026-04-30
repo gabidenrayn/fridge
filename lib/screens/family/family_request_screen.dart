@@ -1,10 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../models/account_model.dart';
-import '../../models/family_request_model.dart';
-import '../../services/auth_service.dart';
+import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
 
 class FamilyRequestScreen extends StatefulWidget {
   const FamilyRequestScreen({super.key});
@@ -13,551 +13,585 @@ class FamilyRequestScreen extends StatefulWidget {
   State<FamilyRequestScreen> createState() => _FamilyRequestScreenState();
 }
 
-class _FamilyRequestScreenState extends State<FamilyRequestScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  final TextEditingController _messageController = TextEditingController();
-  bool _isLoading = false;
-  List<AccountModel> _searchResults = [];
-  List<FamilyRequestModel> _myRequests = [];
-  bool _showSearch = true;
+class _FamilyRequestScreenState extends State<FamilyRequestScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabCtrl;
+  final _searchCtrl = TextEditingController();
+  final _messageCtrl = TextEditingController();
+
+  List<Map<String, dynamic>> _searchResults = [];
+  bool _isSearching = false;
+  String? _searchError;
+  String? _sendingId;
 
   @override
   void initState() {
     super.initState();
-    _loadMyRequests();
+    _tabCtrl = TabController(length: 2, vsync: this);
+    _searchCtrl.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
-    _messageController.dispose();
+    _tabCtrl.dispose();
+    _searchCtrl.dispose();
+    _messageCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _loadMyRequests() async {
-    final authProvider = context.read<AuthProvider>();
-    if (authProvider.userModel != null) {
-      try {
-        final requests = await context
-            .read<AuthService>()
-            .getUserRequests(authProvider.userModel!.id);
-        setState(() {
-          _myRequests = requests;
-        });
-      } catch (e) {
-        // Handle error silently
-      }
+  void _onSearchChanged() {
+    final query = _searchCtrl.text.trim();
+    if (query.length >= 2) {
+      _searchFamilies(query);
+    } else {
+      setState(() {
+        _searchResults = [];
+        _searchError = null;
+      });
     }
   }
 
   Future<void> _searchFamilies(String query) async {
-    if (query.trim().isEmpty) {
-      setState(() {
-        _searchResults = [];
-      });
-      return;
-    }
-
     setState(() {
-      _isLoading = true;
+      _isSearching = true;
+      _searchError = null;
     });
-
     try {
-      final results =
-          await context.read<AuthService>().searchFamilyAccounts(query);
+      final q = query.toLowerCase();
+      final snapshot = await FirebaseFirestore.instance
+          .collection('accounts')
+          .where('nameLower', isGreaterThanOrEqualTo: q)
+          .where('nameLower', isLessThanOrEqualTo: '$q\uf8ff')
+          .limit(20)
+          .get();
+
+      final results = snapshot.docs
+          .where((doc) => doc.data()['type'] == 'family')
+          .map((doc) => {'id': doc.id, ...doc.data()})
+          .toList();
+
       setState(() {
         _searchResults = results;
-        _isLoading = false;
+        _isSearching = false;
       });
     } catch (e) {
+      debugPrint('Search error: $e');
       setState(() {
-        _isLoading = false;
+        _isSearching = false;
+        _searchError = 'error';
       });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error searching families: $e')),
-        );
-      }
     }
   }
 
-  Future<void> _sendRequest(AccountModel family) async {
-    final authProvider = context.read<AuthProvider>();
-    final user = authProvider.userModel;
-    if (user == null) return;
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      await context.read<AuthService>().sendFamilyRequest(
-            family.id,
-            user.id,
-            user.name,
-            user.email,
-            message: _messageController.text.trim().isEmpty
-                ? null
-                : _messageController.text.trim(),
-          );
-
-      setState(() {
-        _isLoading = false;
-        _searchController.clear();
-        _messageController.clear();
-        _searchResults.clear();
-        _showSearch = false;
-      });
-
-      await _loadMyRequests();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Request sent successfully!')),
+  Future<void> _sendRequest(
+      String familyId, String familyName, String sentLabel) async {
+    setState(() => _sendingId = familyId);
+    final error = await context.read<AuthProvider>().sendFamilyJoinRequest(
+          familyId: familyId,
+          message: _messageCtrl.text.trim(),
         );
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error sending request: $e')),
-        );
-      }
-    }
+    setState(() => _sendingId = null);
+    if (!mounted) return;
+    final t = context.read<ThemeProvider>();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+            error ?? '${t.getLocalizedString('request_sent')} «$familyName»'),
+        backgroundColor: error != null ? Colors.red : Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final t = context.watch<ThemeProvider>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = isDark ? AppColors.accent : AppColors.lightAccent;
+    final cardColor = isDark ? AppColors.surface : AppColors.lightCardBg;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
+    final textMuted = isDark ? AppColors.textMuted : AppColors.lightTextMuted;
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              color: Theme.of(context).appBarTheme.foregroundColor, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
-          'Join Family',
+          t.getLocalizedString('join_family'),
           style: GoogleFonts.exo2(
+            color: Theme.of(context).appBarTheme.foregroundColor,
             fontWeight: FontWeight.w700,
+            fontSize: 18,
           ),
         ),
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        elevation: 0,
-        foregroundColor: Theme.of(context).textTheme.titleLarge?.color,
       ),
       body: Column(
         children: [
-          // Toggle buttons
-          Container(
-            margin: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardTheme.color,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Theme.of(context).dividerColor),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _showSearch = true),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: _showSearch
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        'Search',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.exo2(
-                          color: _showSearch
-                              ? Colors.white
-                              : Theme.of(context).textTheme.bodyMedium?.color,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _showSearch = false),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: !_showSearch
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        'My Requests',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.exo2(
-                          color: !_showSearch
-                              ? Colors.white
-                              : Theme.of(context).textTheme.bodyMedium?.color,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Expanded(
-            child: _showSearch ? _buildSearchView() : _buildRequestsView(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchView() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Search field
-          TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search family name...',
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
+          // ── Tab Bar ──────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Container(
+              height: 44,
+              decoration: BoxDecoration(
+                color: cardColor,
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: borderColor),
+              ),
+              child: TabBar(
+                controller: _tabCtrl,
+                indicator: BoxDecoration(
+                  color: accent,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                indicatorSize: TabBarIndicatorSize.tab,
+                dividerColor: Colors.transparent,
+                labelColor: Colors.white,
+                unselectedLabelColor: textMuted,
+                padding: const EdgeInsets.all(3),
+                labelStyle:
+                    GoogleFonts.exo2(fontWeight: FontWeight.w700, fontSize: 13),
+                unselectedLabelStyle:
+                    GoogleFonts.exo2(fontWeight: FontWeight.w500, fontSize: 13),
+                tabs: [
+                  Tab(text: t.getLocalizedString('tab_search')),
+                  Tab(text: t.getLocalizedString('tab_my_requests')),
+                ],
               ),
             ),
-            onChanged: _searchFamilies,
           ),
-          const SizedBox(height: 16),
 
-          // Message field
-          TextField(
-            controller: _messageController,
-            decoration: InputDecoration(
-              hintText: 'Optional message to family owner...',
-              prefixIcon: const Icon(Icons.message),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            maxLines: 3,
-          ),
-          const SizedBox(height: 16),
-
-          // Search results
+          // ── Content ──────────────────────────────────────────
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _searchResults.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                        itemCount: _searchResults.length,
-                        itemBuilder: (context, index) {
-                          final family = _searchResults[index];
-                          return _FamilyCard(
-                            family: family,
-                            onSendRequest: () => _sendRequest(family),
-                          );
-                        },
-                      ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRequestsView() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: _myRequests.isEmpty
-          ? _buildNoRequestsState()
-          : ListView.builder(
-              itemCount: _myRequests.length,
-              itemBuilder: (context, index) {
-                final request = _myRequests[index];
-                return _RequestCard(request: request);
-              },
-            ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.family_restroom,
-            size: 64,
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Search for families to join',
-            style: GoogleFonts.exo2(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).textTheme.titleLarge?.color,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Enter a family name in the search field above',
-            style: GoogleFonts.nunito(
-              color: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.color
-                  ?.withOpacity(0.7),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNoRequestsState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.send,
-            size: 64,
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No requests sent yet',
-            style: GoogleFonts.exo2(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).textTheme.titleLarge?.color,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Search for families and send join requests',
-            style: GoogleFonts.nunito(
-              color: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.color
-                  ?.withOpacity(0.7),
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FamilyCard extends StatelessWidget {
-  final AccountModel family;
-  final VoidCallback onSendRequest;
-
-  const _FamilyCard({
-    required this.family,
-    required this.onSendRequest,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+            child: TabBarView(
+              controller: _tabCtrl,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.family_restroom,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
+                // ── TAB 1: Search ─────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        family.name,
-                        style: GoogleFonts.exo2(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Theme.of(context).textTheme.titleLarge?.color,
+                      // Поле поиска
+                      Container(
+                        decoration: BoxDecoration(
+                          color: cardColor,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: borderColor),
+                        ),
+                        child: TextField(
+                          controller: _searchCtrl,
+                          style: TextStyle(
+                              color: isDark
+                                  ? AppColors.textPrimary
+                                  : AppColors.lightTextPrimary),
+                          decoration: InputDecoration(
+                            hintText:
+                                t.getLocalizedString('search_family_hint'),
+                            hintStyle:
+                                TextStyle(color: textMuted, fontSize: 14),
+                            prefixIcon:
+                                Icon(Icons.search_rounded, color: textMuted),
+                            suffixIcon: _searchCtrl.text.isNotEmpty
+                                ? IconButton(
+                                    icon: Icon(Icons.clear_rounded,
+                                        color: textMuted, size: 18),
+                                    onPressed: () {
+                                      _searchCtrl.clear();
+                                      setState(() => _searchResults = []);
+                                    },
+                                  )
+                                : null,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 14, horizontal: 4),
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Family Account',
-                        style: GoogleFonts.nunito(
-                          color: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.color
-                              ?.withOpacity(0.7),
+                      const SizedBox(height: 10),
+
+                      // Поле сообщения
+                      Container(
+                        decoration: BoxDecoration(
+                          color: cardColor,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: borderColor),
                         ),
+                        child: TextField(
+                          controller: _messageCtrl,
+                          maxLines: 2,
+                          style: TextStyle(
+                              color: isDark
+                                  ? AppColors.textPrimary
+                                  : AppColors.lightTextPrimary),
+                          decoration: InputDecoration(
+                            hintText: t.getLocalizedString('optional_message'),
+                            hintStyle:
+                                TextStyle(color: textMuted, fontSize: 13),
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Icon(Icons.chat_bubble_outline_rounded,
+                                  color: textMuted, size: 18),
+                            ),
+                            border: InputBorder.none,
+                            contentPadding:
+                                const EdgeInsets.fromLTRB(4, 14, 14, 14),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Результаты
+                      Expanded(
+                        child: _isSearching
+                            ? Center(
+                                child: CircularProgressIndicator(
+                                    color: accent, strokeWidth: 2))
+                            : _searchError != null
+                                ? Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.wifi_off_rounded,
+                                            size: 48, color: textMuted),
+                                        const SizedBox(height: 12),
+                                        Text(
+                                          t.getLocalizedString('search_error'),
+                                          style: GoogleFonts.nunito(
+                                              color: textMuted, fontSize: 13),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        const SizedBox(height: 12),
+                                        TextButton(
+                                          onPressed: () => _searchFamilies(
+                                              _searchCtrl.text.trim()),
+                                          child: Text(
+                                            t.getLocalizedString('retry'),
+                                            style: TextStyle(color: accent),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : _searchResults.isEmpty
+                                    ? Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            const Text('🔍',
+                                                style: TextStyle(fontSize: 48)),
+                                            const SizedBox(height: 12),
+                                            Text(
+                                              _searchCtrl.text.length < 2
+                                                  ? t.getLocalizedString(
+                                                      'search_min_chars')
+                                                  : t.getLocalizedString(
+                                                      'families_not_found'),
+                                              style: GoogleFonts.nunito(
+                                                  color: textMuted,
+                                                  fontSize: 14),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : ListView.builder(
+                                        itemCount: _searchResults.length,
+                                        itemBuilder: (ctx, i) {
+                                          final fam = _searchResults[i];
+                                          final famId = fam['id'] as String;
+                                          final famName =
+                                              fam['name'] as String? ??
+                                                  'Family';
+                                          final memberCount =
+                                              (fam['memberIds'] as List?)
+                                                      ?.length ??
+                                                  0;
+                                          return Container(
+                                            margin: const EdgeInsets.only(
+                                                bottom: 10),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 14, vertical: 12),
+                                            decoration: BoxDecoration(
+                                              color: cardColor,
+                                              borderRadius:
+                                                  BorderRadius.circular(14),
+                                              border: Border.all(
+                                                  color: borderColor),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.all(10),
+                                                  decoration: BoxDecoration(
+                                                    color:
+                                                        accent.withOpacity(0.1),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: Icon(
+                                                      Icons.group_rounded,
+                                                      color: accent,
+                                                      size: 20),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        famName,
+                                                        style: GoogleFonts.exo2(
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                          color: isDark
+                                                              ? AppColors
+                                                                  .textPrimary
+                                                              : AppColors
+                                                                  .lightTextPrimary,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        '$memberCount ${t.getLocalizedString('members_count')}',
+                                                        style:
+                                                            GoogleFonts.nunito(
+                                                          fontSize: 12,
+                                                          color: textMuted,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                _sendingId == famId
+                                                    ? SizedBox(
+                                                        width: 24,
+                                                        height: 24,
+                                                        child:
+                                                            CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                          color: accent,
+                                                        ),
+                                                      )
+                                                    : ElevatedButton(
+                                                        onPressed: () => _sendRequest(
+                                                            famId,
+                                                            famName,
+                                                            t.getLocalizedString(
+                                                                'request_sent')),
+                                                        style: ElevatedButton
+                                                            .styleFrom(
+                                                          backgroundColor:
+                                                              accent,
+                                                          foregroundColor:
+                                                              Colors.white,
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .symmetric(
+                                                                  horizontal:
+                                                                      14,
+                                                                  vertical: 8),
+                                                          shape:
+                                                              RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10),
+                                                          ),
+                                                          minimumSize:
+                                                              Size.zero,
+                                                          tapTargetSize:
+                                                              MaterialTapTargetSize
+                                                                  .shrinkWrap,
+                                                        ),
+                                                        child: Text(
+                                                          t.getLocalizedString(
+                                                              'join_btn'),
+                                                          style:
+                                                              GoogleFonts.exo2(
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight.w700,
+                                                          ),
+                                                        ),
+                                                      ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
                       ),
                     ],
                   ),
                 ),
+
+                // ── TAB 2: My Requests ─────────────────────────
+                _MyRequestsTab(accent: accent, isDark: isDark),
               ],
             ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: onSendRequest,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: Text(
-                  'Send Request',
-                  style: GoogleFonts.exo2(fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _RequestCard extends StatelessWidget {
-  final FamilyRequestModel request;
+// ── My Requests Tab ────────────────────────────────────────────────────────
 
-  const _RequestCard({required this.request});
+class _MyRequestsTab extends StatelessWidget {
+  final Color accent;
+  final bool isDark;
+
+  const _MyRequestsTab({required this.accent, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-    String statusText;
-    Color statusColor;
-    IconData statusIcon;
+    final t = context.watch<ThemeProvider>();
+    final auth = context.watch<AuthProvider>();
+    final userId = auth.userModel?.id;
+    final textMuted = isDark ? AppColors.textMuted : AppColors.lightTextMuted;
+    final cardColor = isDark ? AppColors.surface : AppColors.lightCardBg;
+    final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
 
-    switch (request.status) {
-      case FamilyRequestStatus.pending:
-        statusText = 'Pending';
-        statusColor = Colors.orange;
-        statusIcon = Icons.hourglass_empty;
-        break;
-      case FamilyRequestStatus.accepted:
-        statusText = 'Accepted';
-        statusColor = Colors.green;
-        statusIcon = Icons.check_circle;
-        break;
-      case FamilyRequestStatus.rejected:
-        statusText = 'Rejected';
-        statusColor = Colors.red;
-        statusIcon = Icons.cancel;
-        break;
+    if (userId == null) {
+      return Center(
+        child: Text(
+          t.getLocalizedString('not_authorized'),
+          style: GoogleFonts.nunito(color: textMuted),
+        ),
+      );
     }
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('familyRequests')
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+              child: CircularProgressIndicator(color: accent, strokeWidth: 2));
+        }
+        final docs = snapshot.data?.docs ?? [];
+        if (docs.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    statusIcon,
-                    color: statusColor,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Request to join family',
-                        style: GoogleFonts.exo2(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).textTheme.titleLarge?.color,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Sent: ${request.createdAt.day}/${request.createdAt.month}/${request.createdAt.year}',
-                        style: GoogleFonts.nunito(
-                          fontSize: 12,
-                          color: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.color
-                              ?.withOpacity(0.7),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    statusText,
-                    style: GoogleFonts.exo2(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: statusColor,
-                    ),
-                  ),
+                const Text('📭', style: TextStyle(fontSize: 48)),
+                const SizedBox(height: 12),
+                Text(
+                  t.getLocalizedString('no_requests'),
+                  style: GoogleFonts.nunito(color: textMuted, fontSize: 14),
                 ),
               ],
             ),
-            if (request.message != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Message: ${request.message}',
-                style: GoogleFonts.nunito(
-                  fontSize: 13,
-                  color: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.color
-                      ?.withOpacity(0.8),
-                ),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: docs.length,
+          itemBuilder: (ctx, i) {
+            final data = docs[i].data() as Map<String, dynamic>;
+            final status = data['status'] as String? ?? 'pending';
+            final familyName = data['familyName'] as String? ?? 'Family';
+
+            Color statusColor;
+            String statusLabel;
+            IconData statusIcon;
+            switch (status) {
+              case 'accepted':
+                statusColor = Colors.green;
+                statusLabel = t.getLocalizedString('request_accepted');
+                statusIcon = Icons.check_circle_outline;
+                break;
+              case 'rejected':
+                statusColor = Colors.red;
+                statusLabel = t.getLocalizedString('request_rejected');
+                statusIcon = Icons.cancel_outlined;
+                break;
+              default:
+                statusColor = accent;
+                statusLabel = t.getLocalizedString('request_pending');
+                statusIcon = Icons.hourglass_empty_rounded;
+            }
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: borderColor),
               ),
-            ],
-          ],
-        ),
-      ),
+              child: Row(
+                children: [
+                  Icon(Icons.group_rounded, color: accent, size: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          familyName,
+                          style: GoogleFonts.exo2(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: isDark
+                                ? AppColors.textPrimary
+                                : AppColors.lightTextPrimary,
+                          ),
+                        ),
+                        if ((data['message'] as String?)?.isNotEmpty == true)
+                          Text(
+                            data['message'],
+                            style: GoogleFonts.nunito(
+                                fontSize: 12, color: textMuted),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: statusColor.withOpacity(0.4)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(statusIcon, size: 12, color: statusColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          statusLabel,
+                          style: GoogleFonts.exo2(
+                            fontSize: 11,
+                            color: statusColor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

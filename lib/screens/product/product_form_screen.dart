@@ -5,8 +5,8 @@ import 'package:intl/intl.dart';
 import '../../core/constants/app_colors.dart';
 import '../../models/product_model.dart';
 import '../../providers/product_provider.dart';
+import '../../providers/theme_provider.dart';
 
-/// Экран добавления / редактирования продукта
 class ProductFormScreen extends StatefulWidget {
   final ProductModel? product;
   final String? initialName;
@@ -138,19 +138,18 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.watch<ThemeProvider>();
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-            // Шапка
             _FormHeader(
               isEditing: _isEditing,
               onBack: () => Navigator.pop(context),
               onSave: _save,
             ),
-
-            // Форма
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
@@ -160,19 +159,22 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Название
-                      const _FieldLabel('Название продукта'),
+                      _FieldLabel(t.getLocalizedString('product_name_label')),
                       _StyledTextField(
                         controller: _nameCtrl,
-                        hint: 'Введите название',
-                        validator: (v) =>
-                            v == null || v.isEmpty ? 'Укажите название' : null,
+                        hint: t.getLocalizedString('product_name_hint'),
+                        validator: (v) => v == null || v.isEmpty
+                            ? t.getLocalizedString('product_name_required')
+                            : null,
                       ),
                       const SizedBox(height: 16),
 
                       // Бренд
-                      const _FieldLabel('Бренд (необязательно)'),
+                      _FieldLabel(t.getLocalizedString('brand_label')),
                       _StyledTextField(
-                          controller: _brandCtrl, hint: 'Например: Danone'),
+                        controller: _brandCtrl,
+                        hint: t.getLocalizedString('brand_hint'),
+                      ),
                       const SizedBox(height: 16),
 
                       // Количество + единицы
@@ -182,7 +184,8 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const _FieldLabel('Количество'),
+                                _FieldLabel(
+                                    t.getLocalizedString('quantity_label')),
                                 _StyledTextField(
                                   controller: _quantityCtrl,
                                   hint: '1',
@@ -195,7 +198,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const _FieldLabel('Единица'),
+                              _FieldLabel(t.getLocalizedString('unit_label')),
                               _UnitDropdown(
                                 value: _unit,
                                 units: _units,
@@ -208,7 +211,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       const SizedBox(height: 16),
 
                       // Категория
-                      const _FieldLabel('Категория'),
+                      _FieldLabel(t.getLocalizedString('category_label')),
                       _CategorySelector(
                         selected: _category,
                         onChanged: (c) => setState(() => _category = c),
@@ -220,7 +223,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                         children: [
                           Expanded(
                             child: _DateButton(
-                              label: 'Дата покупки',
+                              label: t.getLocalizedString('purchase_date'),
                               date: _purchaseDate,
                               onTap: () => _pickDate(false),
                             ),
@@ -228,7 +231,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: _DateButton(
-                              label: 'Срок годности',
+                              label: t.getLocalizedString('expiry_date'),
                               date: _expiryDate,
                               onTap: () => _pickDate(true),
                               isExpiry: true,
@@ -239,10 +242,10 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
                       const SizedBox(height: 16),
 
                       // Заметка
-                      const _FieldLabel('Заметка (необязательно)'),
+                      _FieldLabel(t.getLocalizedString('note_label')),
                       _StyledTextField(
                         controller: _noteCtrl,
-                        hint: 'Любая дополнительная информация...',
+                        hint: t.getLocalizedString('note_hint'),
                         maxLines: 3,
                       ),
                       const SizedBox(height: 30),
@@ -272,6 +275,7 @@ class _FormHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final t = context.watch<ThemeProvider>();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final surfaceColor = isDark ? AppColors.surface : AppColors.lightSurface;
     final borderColor = isDark ? AppColors.border : AppColors.lightBorder;
@@ -302,7 +306,9 @@ class _FormHeader extends StatelessWidget {
           ),
           const SizedBox(width: 16),
           Text(
-            isEditing ? 'Редактировать' : 'Новый продукт',
+            isEditing
+                ? t.getLocalizedString('edit_product')
+                : t.getLocalizedString('new_product'),
             style: GoogleFonts.exo2(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -321,12 +327,14 @@ class _FormHeader extends StatelessWidget {
                 ]),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text('Сохранить',
-                  style: GoogleFonts.exo2(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
-                  )),
+              child: Text(
+                t.getLocalizedString('save'),
+                style: GoogleFonts.exo2(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
             ),
           ),
         ],
@@ -346,13 +354,15 @@ class _FieldLabel extends StatelessWidget {
         isDark ? AppColors.textMuted : AppColors.lightTextMuted;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Text(text,
-          style: GoogleFonts.exo2(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            color: textMutedColor,
-            letterSpacing: 1,
-          )),
+      child: Text(
+        text,
+        style: GoogleFonts.exo2(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: textMutedColor,
+          letterSpacing: 1,
+        ),
+      ),
     );
   }
 }
@@ -445,10 +455,7 @@ class _UnitDropdown extends StatelessWidget {
           dropdownColor: surfaceColor,
           style: GoogleFonts.exo2(color: textPrimaryColor, fontSize: 14),
           items: units
-              .map((u) => DropdownMenuItem(
-                    value: u,
-                    child: Text(u),
-                  ))
+              .map((u) => DropdownMenuItem(value: u, child: Text(u)))
               .toList(),
           onChanged: onChanged,
         ),
@@ -474,6 +481,7 @@ class _CategorySelector extends StatelessWidget {
     final accentColor = isDark ? AppColors.accent : AppColors.lightAccent;
     final textSecondaryColor =
         isDark ? AppColors.textSecondary : AppColors.lightTextSecondary;
+    final t = context.watch<ThemeProvider>();
 
     return Wrap(
       spacing: 8,
@@ -497,13 +505,14 @@ class _CategorySelector extends StatelessWidget {
               children: [
                 Text(cat.icon, style: const TextStyle(fontSize: 14)),
                 const SizedBox(width: 6),
-                Text(cat.label,
-                    style: GoogleFonts.nunito(
-                      fontSize: 12,
-                      color: isSelected ? accentColor : textSecondaryColor,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w400,
-                    )),
+                Text(
+                  t.getLocalizedString('cat_${cat.name}'),
+                  style: GoogleFonts.nunito(
+                    fontSize: 12,
+                    color: isSelected ? accentColor : textSecondaryColor,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                  ),
+                ),
               ],
             ),
           ),
@@ -537,6 +546,7 @@ class _DateButton extends StatelessWidget {
     final textPrimaryColor =
         isDark ? AppColors.textPrimary : AppColors.lightTextPrimary;
     final fmt = DateFormat('dd.MM.yyyy');
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -551,12 +561,14 @@ class _DateButton extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label,
-                style: GoogleFonts.exo2(
-                  fontSize: 9,
-                  color: textMutedColor,
-                  letterSpacing: 0.8,
-                )),
+            Text(
+              label,
+              style: GoogleFonts.exo2(
+                fontSize: 9,
+                color: textMutedColor,
+                letterSpacing: 0.8,
+              ),
+            ),
             const SizedBox(height: 4),
             Row(
               children: [
@@ -568,12 +580,14 @@ class _DateButton extends StatelessWidget {
                   color: isExpiry ? accentColor : textMutedColor,
                 ),
                 const SizedBox(width: 6),
-                Text(fmt.format(date),
-                    style: GoogleFonts.exo2(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: textPrimaryColor,
-                    )),
+                Text(
+                  fmt.format(date),
+                  style: GoogleFonts.exo2(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: textPrimaryColor,
+                  ),
+                ),
               ],
             ),
           ],
