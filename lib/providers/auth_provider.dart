@@ -223,6 +223,8 @@ class AuthProvider with ChangeNotifier {
       final accountId = _accountModel?.id;
       if (accountId == null) return 'Аккаунт не найден';
 
+      debugPrint('Leaving family: uid=$uid, accountId=$accountId');
+
       // Убираем себя из memberIds семейного аккаунта
       await FirebaseFirestore.instance
           .collection('accounts')
@@ -230,6 +232,8 @@ class AuthProvider with ChangeNotifier {
           .update({
         'memberIds': FieldValue.arrayRemove([uid]),
       });
+
+      debugPrint('Removed from family members');
 
       // Создаём новый личный аккаунт
       final personalRef =
@@ -241,13 +245,18 @@ class AuthProvider with ChangeNotifier {
         'nameLower': (_userModel?.name ?? '').toLowerCase(),
       });
 
+      debugPrint('Created personal account: ${personalRef.id}');
+
       // Обновляем accountId у пользователя
       await FirebaseFirestore.instance
           .collection('users')
           .doc(uid)
           .update({'accountId': personalRef.id});
 
+      debugPrint('Updated user accountId to personal account');
+
       await reloadProfile();
+      debugPrint('Reloaded profile after leaving family');
       return null;
     } catch (e) {
       debugPrint('Error leaving family: $e');

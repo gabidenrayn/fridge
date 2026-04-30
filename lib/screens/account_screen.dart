@@ -67,52 +67,14 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _leaveFamily() async {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final t = context.read<ThemeProvider>();
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDark ? AppColors.surface : AppColors.lightSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          t.getLocalizedString('leave_family_title'),
-          style: GoogleFonts.exo2(
-            fontWeight: FontWeight.w700,
-            color: isDark ? AppColors.textPrimary : AppColors.lightTextPrimary,
-          ),
-        ),
-        content: Text(
-          t.getLocalizedString('leave_family_body'),
-          style: GoogleFonts.nunito(
-            fontSize: 14,
-            color:
-                isDark ? AppColors.textSecondary : AppColors.lightTextSecondary,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              t.getLocalizedString('cancel'),
-              style: TextStyle(
-                  color:
-                      isDark ? AppColors.textMuted : AppColors.lightTextMuted),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              t.getLocalizedString('leave_family'),
-              style: const TextStyle(
-                  color: Colors.red, fontWeight: FontWeight.w700),
-            ),
-          ),
-        ],
-      ),
-    );
-    if (confirm == true) {
-      final error = await context.read<AuthProvider>().leaveFamily();
-      if (error != null) setState(() => _errorMessage = error);
+    debugPrint('_leaveFamily called - leaving family immediately');
+    final error = await context.read<AuthProvider>().leaveFamily();
+    debugPrint('leaveFamily returned error: $error');
+    if (error != null) {
+      _errorMessage = error;
+      debugPrint('Error message set: $error');
+    } else {
+      debugPrint('Leave family successful, UI should update via AuthProvider');
     }
   }
 
